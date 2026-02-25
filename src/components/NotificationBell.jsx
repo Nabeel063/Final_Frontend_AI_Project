@@ -5,25 +5,42 @@ import useSocket from '../utils/useSocket';
 import { baseUrl } from '../utils/ApiConstants.jsx';
 
 export default function NotificationBell({ userId }) {
+  console.log('NotificationBell component mounted/rendered, userId:', userId);
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [buttonPosition, setButtonPosition] = useState({ top: 0, right: 0 });
   const buttonRef = React.useRef(null);
+  const dropdownRef = React.useRef(null);
+  const [loadingMarkAll, setLoadingMarkAll] = useState(false);
+  const isMounted = React.useRef(true);
+
+  const fetchNotifications = async () => {
+    if (!userId) {
+      console.log('fetchNotifications: No userId available');
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('candidateToken') || localStorage.getItem('superAdminToken');
+      console.log('fetchNotifications: Calling API with userId:', userId);
+      const res = await axios.get(`${baseUrl}/notifications/get-notify`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log('Notifications API response:', res.status, res.data);
+      const notificationArray = Array.isArray(res.data) ? res.data : res.data.data || [];
+      console.log('Setting notifications to:', notificationArray);
+      if (isMounted.current) setNotifications(notificationArray);
+    } catch (err) { 
+      console.error('Error fetching notifications - Status:', err?.response?.status, 'Message:', err?.message);
+    }
+  };
 
   useEffect(() => {
-    if (!userId) return;
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('candidateToken') || localStorage.getItem('superAdminToken');
-        const res = await axios.get(`${baseUrl}/notifications/get-notify`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setNotifications(res.data);
-      } catch (err) { }
-    };
+    isMounted.current = true;
+    console.log('useEffect triggered for userId:', userId);
     fetchNotifications();
+    return () => { isMounted.current = false; };
   }, [userId]);
 
   useSocket(userId, (data) => {
@@ -40,16 +57,50 @@ export default function NotificationBell({ userId }) {
     }
   }, [showDropdown]);
 
-  // Close on outside clickx
+  // Close on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (showDropdown && buttonRef.current && !buttonRef.current.contains(e.target)) {
+        // Also check if click is inside the dropdown portal
+        if (dropdownRef.current && dropdownRef.current.contains(e.target)) {
+          return; // Don't close if clicking inside dropdown
+        }
         setShowDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDropdown]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  
+  // Debug: log whenever unreadCount changes
+  useEffect(() => {
+    console.log('Unread count updated:', unreadCount, 'Total notifications:', notifications.length, 'Notifications:', notifications);
+  }, [unreadCount, notifications]);
+
+  const getToken = () => localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('candidateToken') || localStorage.getItem('superAdminToken');
+
+  const markAllAsRead = async () => {
+    console.log('markAllAsRead CALLED, unreadCount:', unreadCount, 'Total notifications:', notifications.length);
+    setLoadingMarkAll(true);
+    try {
+      const token = getToken();
+      console.log('API Call: PATCH', `${baseUrl}/notifications/mark-all-read`);
+      const response = await axios.patch(`${baseUrl}/notifications/mark-all-read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('SUCCESS - API response:', response.status, response.data);
+      console.log('Now refreshing notifications...');
+      await fetchNotifications();
+      console.log('Notifications refreshed successfully');
+    } catch (err) {
+      console.error('FAILED - Status:', err?.response?.status, 'Error:', err?.response?.data, 'Message:', err?.message);
+      alert('Error: ' + (err?.response?.data?.error || err?.message || 'Mark all as read failed'));
+    } finally {
+      setLoadingMarkAll(false);
+    }
+  };
 
   return (
     <div className="relative">
@@ -62,16 +113,18 @@ export default function NotificationBell({ userId }) {
         <svg className="w-6 h-6 text-[#6D28D9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
-        {notifications.length > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-            {notifications.length}
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full shadow-md">
+            {unreadCount}
           </span>
         )}
       </button>
 
       {showDropdown && createPortal(
         <div
+          ref={dropdownRef}
           className="fixed w-80 bg-white border border-gray-200 rounded-xl shadow-2xl animate-fade-in"
+          onClick={(e) => e.stopPropagation()}
           style={{
             top: buttonPosition.top,
             right: buttonPosition.right,
@@ -85,7 +138,17 @@ export default function NotificationBell({ userId }) {
               </svg>
               Notifications
             </div>
-            <span className="p-4 text-sm font-semibold text-[#6D28D9] cursor-pointer">Marked All</span>
+            <button
+              className="mr-3 px-3 py-2 text-sm font-semibold text-white bg-[#6D28D9] rounded-md shadow-sm hover:opacity-95 disabled:opacity-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('Mark all as read button CLICKED');
+                markAllAsRead();
+              }}
+              disabled={loadingMarkAll}
+            >
+              {loadingMarkAll ? 'Marking...' : (unreadCount === 0 ? 'All Read' : 'Mark all as read')}
+            </button>
           </div>
 
           <ul className="max-h-96 overflow-y-auto divide-y divide-gray-100">
