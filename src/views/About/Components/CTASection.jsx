@@ -1,5 +1,5 @@
 import React from 'react';
-
+//about
 export default function CTASection() {
   return (
     <section className="bg-gradient-to-br from-[#2a45b0] to-[#26bba7] py-16 md:py-20 lg:py-24 text-white text-center overflow-hidden">
