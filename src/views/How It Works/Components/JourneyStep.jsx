@@ -4,8 +4,8 @@ import { CheckCircle2 } from 'lucide-react';
 export default function JourneyStep({ step, isLast }) {
   return (
     <>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`flex flex-col ${step.reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-12 lg:gap-16 xl:gap-24`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 ">
+        <div className={`flex flex-col ${step.reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center  lg:gap-2 xl:gap-2`}>
           
           {/* Text Side */}
           <div className="flex-1 text-left">

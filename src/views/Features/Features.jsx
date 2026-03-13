@@ -80,7 +80,7 @@ export default function Features() {
       <FeaturesNav/>
 
       
-      <section className="py-16 md:py-20 lg:py-32 space-y-24 md:space-y-32">
+      <section className="py-8 md:py-10 lg:py-16 space-y-10 md:space-y-24">
         {detailedFeatures.map((f, i) => (
           <article 
             key={i} 

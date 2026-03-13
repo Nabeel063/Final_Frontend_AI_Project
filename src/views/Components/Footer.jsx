@@ -61,15 +61,15 @@ export default function Footer() {
             <ul className="space-y-4 text-sm text-indigo-100/70">
               <li className="flex items-start gap-3">
                 <Mail size={18} className="text-indigo-400 mt-0.5 shrink-0" />
-                <a href="mailto:hello@recruterai.com" className="hover:text-white transition-colors">hello@recruterai.com</a>
+                <a href="mailto:hello@recruterai.com" className="hover:text-white transition-colors">airecruit@gmail.com</a>
               </li>
               <li className="flex items-start gap-3">
                 <Phone size={18} className="text-indigo-400 mt-0.5 shrink-0" />
-                <a href="tel:+15551234567" className="hover:text-white transition-colors">+1 (555) 123-4567</a>
+                <a href="tel:+15551234567" className="hover:text-white transition-colors">+91 9876543210</a>
               </li>
               <li className="flex items-start gap-3 leading-relaxed">
                 <MapPin size={18} className="text-indigo-400 mt-0.5 shrink-0" />
-                <span>123 Innovation Drive, Tech City, TC 12345</span>
+                <span>123 Newtown Kolkata-700156</span>
               </li>
             </ul>
           </div>

@@ -146,7 +146,7 @@ export default function Industries() {
 
       <Built/>
 
-      <section className="bg-[#1E1B4B] py-16 md:py-20 lg:py-24 text-white">
+      {/* <section className="bg-[#1E1B4B] py-16 md:py-20 lg:py-24 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 tracking-tight">Trusted Across Industries</h2>
           <p className="text-slate-400 mb-12 md:mb-16 text-sm md:text-base">Real feedback from industry leaders</p>
@@ -165,7 +165,7 @@ export default function Industries() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       
       <section className="py-16 md:py-20 lg:py-24 bg-gradient-to-br from-[#2a45b0] to-[#26bba7] text-center">

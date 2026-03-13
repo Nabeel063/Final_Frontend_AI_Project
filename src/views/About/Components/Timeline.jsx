@@ -1,11 +1,11 @@
 import React from 'react';
 
 const timeline = [
-  { year: "2020", title: "The Spark", desc: "Our founders, frustrated by inefficient hiring processes, envisioned an AI that could transform recruitment." },
-  { year: "2021", title: "Building the Foundation", desc: "Assembled a world-class team of AI researchers, HR experts, and engineers. Developed our core AI engine." },
-  { year: "2022", title: "First Launch", desc: "Launched RecruiterAI with 50 beta customers. Processed over 100,000 candidates in the first year." },
-  { year: "2023", title: "Rapid Growth", desc: "Expanded to 500+ customers across 30 countries. Added AI interviews and advanced analytics." },
-  { year: "2024", title: "Industry Leader", desc: "Recognized as a top AI recruitment platform. Serving Fortune 500 companies and fast-growing startups alike." },
+  { year: "2025", title: "The Beginning of Intelligent Hiring", desc: "RecruiterAI was founded with a vision to simplify and automate recruitment using artificial intelligence. The goal was to help companies find the right talent faster while reducing manual screening efforts." },
+  { year: "2026", title: "Building the Core Platform", desc: "Our team of AI engineers, HR specialists, and product designers developed the core AI engine for resume parsing, smart candidate matching, and automated job description generation." },
+  { year: "2026", title: "Platform Launch", desc: "RecruiterAI launched its first version, enabling recruiters to create job descriptions using AI, filter resumes intelligently, and automate candidate shortlisting. Early adopters quickly saw faster hiring cycles." },
+  { year: "2026", title: "Expanding Capabilities", desc: "New features such as AI-driven candidate assessments, automated interview scheduling, and recruiter analytics were introduced, helping organizations make more data-driven hiring decisions." },
+  { year: "2026", title: "Scaling Globally", desc: "RecruiterAI expanded to serve companies across multiple industries worldwide. The platform now helps organizations streamline recruitment, improve candidate experience, and hire top talent efficiently." },
 ];
 
 export default function Timeline() {

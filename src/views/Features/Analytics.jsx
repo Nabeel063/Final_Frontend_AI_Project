@@ -31,7 +31,7 @@ const analyticFeatures = [
 
 export default function Analytics() {
   return (
-    <section id="analytics" className="py-16 md:py-20 lg:py-32 bg-white overflow-hidden">
+    <section id="analytics" className="py-8 md:py-10 lg:py-16 space-y-10 md:space-y-24 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center gap-12 md:gap-16">
           
