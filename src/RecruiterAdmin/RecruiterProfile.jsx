@@ -221,7 +221,7 @@ const RecruiterProfile = () => {
                         disabled={saving}
                         className="px-6 py-2 bg-gradient-to-r from-[#6950BD] to-[#896BE6] text-white rounded-lg hover:bg-purple-700"
                     >
-                        {saving ? "Saving..." : "Generate"}
+                        {saving ? "Updating..." : "Update Profile "}
                     </button>
                 </div>
 

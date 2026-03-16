@@ -145,23 +145,27 @@ export default function Examination() {
                 return null;
               };
 
-              const formatToAMPM = (time24) => {
-  if (!time24) return "";
-
-  // Split "20:00" into [20, 00]
-  let [hours, minutes] = time24.split(':').map(Number);
-  
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  
-  // Convert 24h to 12h format
-  hours = hours % 12;
-  hours = hours ? hours : 12; // the hour '0' should be '12'
-  
-  // Ensure minutes always have two digits (e.g., 05 instead of 5)
-  const strMinutes = minutes < 10 ? '0' + minutes : minutes;
-
-  return `${hours}:${strMinutes} ${ampm}`;
-};
+              const formatToAMPM = (timeStr) => {
+                if (!timeStr) return "";
+               
+                // If it already contains AM/PM, it's likely already formatted or toLocaleTimeString outputted it
+                if (timeStr.toUpperCase().includes("AM") || timeStr.toUpperCase().includes("PM")) {
+                  return timeStr;
+                }
+ 
+                // Extract hours and minutes using regex to handle potentially messy strings
+                const match = timeStr.match(/(\d{1,2})[.:](\d{2})/);
+                if (!match) return timeStr;
+ 
+                let hours = parseInt(match[1]);
+                const minutes = match[2];
+ 
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+ 
+                return `${hours}:${minutes} ${ampm}`;
+              };
 
               if (!startDT) startDT = tryDateOnlyAsStartOfDay(rawStart) || null;
               if (!endDT) endDT = tryDateOnlyAsEndOfDay(rawEnd) || null;

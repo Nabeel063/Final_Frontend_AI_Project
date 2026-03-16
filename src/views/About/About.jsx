@@ -16,7 +16,7 @@ export default function About() {
       <MissionVision />
       <Timeline />
       <ValuesSection />
-      <TeamSection />
+      {/* <TeamSection /> */}
       <WhyChooseSection />
       <CTASection />
     </div>

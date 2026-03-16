@@ -102,7 +102,7 @@ export default function Header() {
               className="rounded-full bg-gradient-to-r from-[#6338D9] to-[#522cb8] px-6 py-2 text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
               onClick={() => navigate("/CandidateLogin")}
             >
-              Book a Demo
+              Login as Candidate
             </button>
           </div>
 
