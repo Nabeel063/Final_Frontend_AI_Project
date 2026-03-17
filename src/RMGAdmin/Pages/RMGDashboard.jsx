@@ -312,19 +312,32 @@ function RMGDashboard() {
         <div className="min-h-screen text-black space-y-6">
             <div className="grid gap-4 sm:gap-6 lg:grid-cols-5">
 
-                {/* Banner */}
-                <div className="relative h-40 sm:h-48 lg:h-60 w-full overflow-hidden rounded-xl sm:rounded-2xl lg:col-span-3">
-                    <img src={heroImage} alt="Dashboard Banner" className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 flex flex-col p-4 sm:p-6 md:p-8">
-                        <p className="mb-1 text-[10px] sm:text-xl text-black">{formatDate(now)}</p>
-                        <h1 className=" text-xl font-bold text-black sm:text-4xl lg:text-5xl">
-                            {getGreeting()}, {user?.name}!
-                        </h1>
-                        <p className="mt-1 max-w-[200px] text-[10px] text-black sm:max-w-xs sm:text-sm">
-                            Run the show effortlessly with smarter controls and happy workflows
+                <div className="relative h-44 w-full overflow-hidden rounded-xl sm:h-56 md:h-64 lg:h-72 lg:col-span-3">
+
+                    <img
+                        src={heroImage}
+                        alt="Dashboard Banner"
+                        className="absolute inset-0 h-full w-full object-cover"
+                    />
+
+                    <div className="relative z-10 flex h-full flex-col justify-center p-5 sm:p-8 md:p-10 lg:p-12">
+                        <p className="text-[10px] font-medium text-black/70 sm:text-xs md:text-sm lg:text-base">
+                            {formatDate(now)}
                         </p>
 
-                        <button className=" m-2 px-2 w-52 py-2 bg-[#59459F] rounded-sm"> See All Job Requisitions</button>
+                        <h1 className="mt-1 text-xl font-bold text-black sm:text-3xl md:text-4xl lg:text-5xl">
+                            {getGreeting()}, {user?.name}!
+                        </h1>
+
+                        <p className="mt-2 max-w-[190px] text-[10px] leading-snug text-black/80 sm:mt-4 sm:max-w-xs sm:text-sm md:text-base lg:max-w-md">
+                            Run the show effortlessly with smarter controls and happy workflows.
+                        </p>
+
+                        <div className="mt-4 sm:mt-6">
+                            <button className="inline-flex items-center justify-center rounded-md bg-[#59459F] px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-[#483885] active:scale-95 sm:px-6 sm:py-3 sm:text-sm md:text-base">
+                                See All Job Requisitions
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -635,27 +648,42 @@ function RMGDashboard() {
                 </div>
             </div>
 
+            {/*Monthly Trends*/}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <div className="lg:col-span-5 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm h-[400px] flex flex-col">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 sm:mb-6">
-                        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Monthly Trends 2026</h2>
-                        <div className="flex flex-wrap items-center gap-4">
-                            <div className="flex items-center gap-4 text-xs">
-                                <div className="flex items-center gap-1">
-                                    <div className="w-3 h-3 rounded-full bg-[#ff8a9a]"></div>
-                                    <span>Current <br />Requisitions</span>
-                                    <span className="font-bold text-gray-800">({trendTotals.candidates})</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <div className="w-3 h-3 rounded-full bg-[#8280ff]"></div>
-                                    <span>JD <br />Created</span>
-                                    <span className="font-bold text-gray-800">({trendTotals.jd})</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <div className="w-3 h-3 rounded-full bg-[#c58fff]"></div>
-                                    <span>Total <br />Candidates</span>
-                                    <span className="font-bold text-gray-800">({trendTotals.allHr})</span>
-                                </div>
+                    <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between sm:mb-8">
+                        {/* Title Section */}
+                        <h2 className="text-lg font-bold tracking-tight text-gray-900 sm:text-xl md:text-2xl">
+                            Monthly Trends 2026
+                        </h2>
+
+                        {/* Legend Container */}
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-3 sm:gap-6">
+                            {/* Requisitions */}
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 shrink-0 rounded-full bg-[#ff8a9a]"></div>
+                                <p className="text-[11px] leading-tight text-gray-600 sm:text-xs">
+                                    Current Requisitions <br className="hidden xs:block" />
+                                    <span className="font-bold text-gray-900">({trendTotals.candidates})</span>
+                                </p>
+                            </div>
+
+                            {/* JD Created */}
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 shrink-0 rounded-full bg-[#8280ff]"></div>
+                                <p className="text-[11px] leading-tight text-gray-600 sm:text-xs">
+                                    JD Created <br className="hidden xs:block" />
+                                    <span className="font-bold text-gray-900">({trendTotals.jd})</span>
+                                </p>
+                            </div>
+
+                            {/* Total Candidates */}
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 shrink-0 rounded-full bg-[#c58fff]"></div>
+                                <p className="text-[11px] leading-tight text-gray-600 sm:text-xs">
+                                    Total Candidates <br className="hidden xs:block" />
+                                    <span className="font-bold text-gray-900">({trendTotals.allHr})</span>
+                                </p>
                             </div>
                         </div>
                     </div>

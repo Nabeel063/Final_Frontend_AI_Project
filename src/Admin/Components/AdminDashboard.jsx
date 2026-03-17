@@ -323,16 +323,32 @@ function AdminDashboard() {
 
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-5">
           {/* banner */}
-          <div className="relative h-40 sm:h-48 lg:h-60 w-full overflow-hidden rounded-xl sm:rounded-2xl lg:col-span-3">
-            <img src={heroImage} alt="Dashboard Banner" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 flex flex-col p-2 sm:p-4 md:p-6">
-              <p className="mb-1 text-black text-[10px] sm:text-xl mt-2 ">{formatDate(now)}</p>
-              <h1 className="text-left text-xl font-bold text-black sm:text-4xl lg:text-5xl">
+          <div className="relative h-40 w-full overflow-hidden rounded-xl sm:h-56 md:h-64 lg:h-72 lg:col-span-3">
+            <img
+              src={heroImage}
+              alt="Dashboard Banner"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+
+            <div className="relative z-10 flex h-full flex-col justify-center p-4 sm:p-8 md:p-10 lg:p-12">
+
+              <p className="text-[10px] font-medium text-black/70 sm:text-xs md:text-sm lg:text-base">
+                {formatDate(now)}
+              </p>
+
+              <h1 className="mt-1 text-xl font-bold text-black sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
                 {getGreeting()}, {getFirstName(user?.name)}!
               </h1>
-              <p className="mt-3 max-w-[200px]  text-[10px] text-black/90 sm:max-w-xs sm:text-sm">
-                Run the show effortlessly with smarter {user.role} controls and happy workflows. </p>
-              <button className=" m-2 px-2 w-45 py-2 bg-[#59459F] rounded-sm"> Manage Recruiters</button>
+
+              <p className="mt-2 max-w-[180px] text-[10px] leading-tight text-black/80 sm:mt-4 sm:max-w-xs sm:text-sm md:text-base lg:max-w-md">
+                Run the show effortlessly with smarter {user.role} controls and happy workflows.
+              </p>
+
+              <div className="mt-4 sm:mt-6">
+                <button className="w-fit rounded-lg bg-[#59459F] px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-[#483885] active:scale-95 sm:px-6 sm:py-3 sm:text-sm">
+                  Manage Recruiters
+                </button>
+              </div>
             </div>
           </div>
           {/* //pie chart */}
