@@ -1,7 +1,8 @@
 // socket.js
 import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
+//const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ||'https://recruterai.in';
 const socket = io(SOCKET_URL, {
   path: "/socket.io",
 // const socket = io("https://recruterai.netfotech.in", { // https://exam-backend-11.onrender.com or path nhi rahega // https://103.192.198.240
