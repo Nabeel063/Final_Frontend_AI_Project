@@ -311,7 +311,7 @@ function RequirementForm() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-4">
           <h1 className="text-xl sm:text-2xl font-semibold text-[#111827]">
-            Generate Assessment
+            Create requisition
           </h1>
         </div>
 

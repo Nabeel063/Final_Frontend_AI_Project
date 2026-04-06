@@ -240,7 +240,7 @@ const AllJDs = () => {
             />
 
             <main className="max-w-7xl mx-auto mt-8">
-                <section className="mb-12" aria-labelledby="recommended-jobs-heading">
+                {/* <section className="mb-12" aria-labelledby="recommended-jobs-heading">
                     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5">
                         <div>
                             <h2 id="recommended-jobs-heading" className="text-xl font-bold text-gray-900 tracking-tight">
@@ -276,7 +276,7 @@ const AllJDs = () => {
                             ))}
                         </div>
                     )}
-                </section>
+                </section> */}
 
                 <h2 className="text-lg font-bold text-gray-900 mb-4">All available jobs</h2>
 

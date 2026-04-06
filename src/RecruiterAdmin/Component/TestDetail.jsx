@@ -466,7 +466,7 @@ export default function TestDetail({ formData, onUpdate, onNext, onCancel, loadi
 
             {/* SUGGESTED SKILLS (Matches the pill-style in your image) */}
             <div className="flex flex-wrap gap-3 mt-4">
-              {['PowerBI', 'adobe xd', 'React', 'Node.js'].filter(s =>
+              {[].filter(s =>
                 !formData.skills.map(x => x.toLowerCase()).includes(s.toLowerCase())
               ).map(suggestion => (
                 <button
