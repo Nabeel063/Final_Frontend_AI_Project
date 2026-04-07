@@ -113,7 +113,9 @@ const TestDetails = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await testApi.startTest(questionSetId);
+      const queryParams = new URLSearchParams(window.location.search);
+      const orgId = queryParams.get('orgId') || queryParams.get('org_id');
+      const data = await testApi.startTest(questionSetId, orgId);
       setSummary(deriveSummaryFromPayload(data));
     } catch (e) {
       console.error('TestDetails: failed to load test', e);

@@ -134,23 +134,97 @@ const ViewInsightDetail = ({ candidate }) => {
                       )}
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                      {/* Candidate Answer */}
                       <div className={`p-4 border-2 rounded-xl text-sm leading-relaxed ${
                         isCorrect 
                           ? 'bg-green-50 border-green-200 text-green-800' 
-                          : 'bg-gray-50 border-gray-200 text-gray-600'
+                          : (!candidateAnswer ? 'bg-gray-50 border-gray-100 text-gray-400' : 'bg-red-50 border-red-100 text-red-800')
                       }`}>
                         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Your Answer</p>
-                        {candidateAnswer || <span className="italic text-gray-400">No answer provided.</span>}
+                        {sectionName.toUpperCase() === 'CODING' ? (
+                          <pre className="bg-slate-900 text-slate-50 p-4 rounded-lg overflow-x-auto font-mono text-xs sm:text-sm mt-2 shadow-inner">
+                             <code>{candidateAnswer || '// No answer provided.'}</code>
+                          </pre>
+                        ) : (
+                          <div className="font-medium">
+                            {candidateAnswer || <span className="italic">No answer provided.</span>}
+                          </div>
+                        )}
                       </div>
-                      {q.feedback && (
-                        <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
-                          <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1">Feedback</p>
-                          <p className="text-sm text-blue-700">{q.feedback}</p>
+
+                      {/* Expected Answer / Reference Solution */}
+                      {correctAnswer && (
+                        <div className="p-4 border-2 rounded-xl bg-indigo-50 border-indigo-100 text-indigo-900 text-sm leading-relaxed shadow-sm">
+                          <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">Expected Answer / Reference Solution</p>
+                          {sectionName.toUpperCase() === 'CODING' ? (
+                             <div className="space-y-4">
+                               <pre className="bg-indigo-900/10 text-indigo-800 p-4 rounded-lg overflow-x-auto font-mono text-xs sm:text-sm border border-indigo-200">
+                                 <code>{correctAnswer}</code>
+                               </pre>
+                               {(q.input_spec || q.output_spec || q.complexity_constraints) && (
+                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-indigo-100/50">
+                                    {q.input_spec && (
+                                      <div>
+                                        <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Input Spec</p>
+                                        <p className="text-xs">{q.input_spec}</p>
+                                      </div>
+                                    )}
+                                    {q.output_spec && (
+                                      <div>
+                                        <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Output Spec</p>
+                                        <p className="text-xs">{q.output_spec}</p>
+                                      </div>
+                                    )}
+                                    {q.complexity_constraints && (
+                                      <div className="sm:col-span-2">
+                                        <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Complexity Constraints</p>
+                                        <p className="text-xs font-mono">{q.complexity_constraints}</p>
+                                      </div>
+                                    )}
+                                 </div>
+                               )}
+                             </div>
+                          ) : (
+                            <p className="font-semibold">{correctAnswer}</p>
+                          )}
                         </div>
                       )}
+
+                      {/* Rubric for Audio/Video */}
+                      {q.rubric && (
+                         <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 shadow-sm">
+                            <p className="text-xs font-semibold text-amber-500 uppercase tracking-wider mb-2">Evaluation Rubric</p>
+                            <p className="text-sm text-amber-900 leading-relaxed">{q.rubric}</p>
+                            {q.expected_keywords && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {String(q.expected_keywords).split(',').map((kw, i) => (
+                                  <span key={i} className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] uppercase font-bold rounded">#{kw.trim()}</span>
+                                ))}
+                              </div>
+                            )}
+                         </div>
+                      )}
+
+                      {/* Explanation */}
+                      {q.explanation && (
+                        <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 shadow-sm">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Explanation</p>
+                          <p className="text-sm text-gray-700 leading-relaxed italic">{q.explanation}</p>
+                        </div>
+                      )}
+
+                      {/* Feedback */}
+                      {q.feedback && (
+                        <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 shadow-sm">
+                          <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1">Evaluation Feedback</p>
+                          <p className="text-sm text-blue-800 leading-relaxed italic">{q.feedback}</p>
+                        </div>
+                      )}
+
                     </div>
                   )}
+
                 </div>
               );
             })}

@@ -129,7 +129,7 @@ function CreateJD() {
 
             if (response.data.success) {
                 setGeneratedJD(response.data.jd);
-                const generatedUrl = `https://recruterai.netfotech.in/JDDetail/${response.data.jd._id}`;
+                const generatedUrl = `https://recruterai.in/JDDetail/${response.data.jd._id}`;
                 setJdUrl(generatedUrl);
                 setShowSuccessPopup(true);
             }

@@ -57,6 +57,7 @@ const QuestionsList = () => {
     q.content?.correct_answer ||
     q.content?.answer_key ||
     q.content?.expected_answer ||
+    q.content?.reference_solution ||
     "";
 
   const resolveCorrectOptionIndex = (q) => {
@@ -116,6 +117,16 @@ const QuestionsList = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const escapeHtml = (str) => {
+    if (!str && str !== 0) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   };
 
   const handleDownloadPDF = async () => {
@@ -189,11 +200,26 @@ const QuestionsList = () => {
           qDiv.appendChild(taskDiv);
         }
 
-        if (q.type === "coding" && q.content?.expected_answer) {
-          const answerDiv = document.createElement("div");
-          answerDiv.style.margin = "6px 0 0 0";
-          answerDiv.innerHTML = `<strong>Correct Answer:</strong> ${q.content.expected_answer}`;
-          qDiv.appendChild(answerDiv);
+        if (q.type === "coding") {
+          const solution = q.content?.expected_answer || q.content?.reference_solution;
+          if (solution) {
+            const answerDiv = document.createElement("div");
+            answerDiv.style.margin = "6px 0 0 0";
+            answerDiv.innerHTML = `<strong>Correct Answer:</strong> <pre style="background:#f9fafb;padding:8px;border-radius:4px;font-family:monospace;font-size:10px">${escapeHtml(solution)}</pre>`;
+            qDiv.appendChild(answerDiv);
+          }
+          
+          if (q.content?.input_spec || q.content?.output_spec || q.content?.complexity_constraints) {
+            const specDiv = document.createElement("div");
+            specDiv.style.margin = "6px 0 0 0";
+            specDiv.style.fontSize = "10px";
+            specDiv.innerHTML = `
+              ${q.content.input_spec ? `<div><strong>Input:</strong> ${q.content.input_spec}</div>` : ''}
+              ${q.content.output_spec ? `<div><strong>Output:</strong> ${q.content.output_spec}</div>` : ''}
+              ${q.content.complexity_constraints ? `<div><strong>Complexity:</strong> ${q.content.complexity_constraints}</div>` : ''}
+            `;
+            qDiv.appendChild(specDiv);
+          }
         }
 
         container.appendChild(qDiv);
@@ -430,21 +456,67 @@ const QuestionsList = () => {
                     )}
 
                     {(isMCQ ? !!correct : !!expectedAnswer || !!correct) && (
-                      <div className="mt-4 rounded-lg bg-green-50 px-3 py-2 border border-green-100">
+                      <div className="mt-4 rounded-xl bg-green-50 px-3 py-2 border border-green-100">
                         <div className="text-[11px] text-green-600">
                           <span className="font-semibold">Correct Answer:</span>{" "}
                           <span className="text-green-700">
-                            {isMCQ ? String(correct || "") : String(expectedAnswer || correct || "")}
+                            {type === "Coding" ? (
+                              <pre className="mt-2 bg-green-900/5 text-green-800 p-4 rounded-xl overflow-x-auto font-mono text-xs border border-green-100">
+                                <code>{String(expectedAnswer || correct || "No reference solution provided")}</code>
+                              </pre>
+                            ) : (
+                              String(expectedAnswer || correct || "")
+                            )}
                           </span>
                         </div>
                       </div>
                     )}
 
+                    {type === "Coding" &&
+                      (q.content?.input_spec ||
+                        q.content?.output_spec ||
+                        q.content?.complexity_constraints) && (
+                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {q.content?.input_spec && (
+                            <div className="rounded-xl border border-indigo-100/50 bg-indigo-50/50 p-4">
+                              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">
+                                Input Specification
+                              </p>
+                              <p className="text-xs text-indigo-900 leading-relaxed font-medium">
+                                {q.content.input_spec}
+                              </p>
+                            </div>
+                          )}
+                          {q.content?.output_spec && (
+                            <div className="rounded-xl border border-indigo-100/50 bg-indigo-50/50 p-4">
+                              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">
+                                Output Specification
+                              </p>
+                              <p className="text-xs text-indigo-900 leading-relaxed font-medium">
+                                {q.content.output_spec}
+                              </p>
+                            </div>
+                          )}
+                          {q.content?.complexity_constraints && (
+                            <div className="sm:col-span-2 rounded-xl border border-amber-100/50 bg-amber-50/30 p-4">
+                              <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2">
+                                Complexity Constraints
+                              </p>
+                              <p className="text-xs font-mono text-amber-900 bg-white/50 p-2 rounded-lg border border-amber-100 shadow-sm">
+                                {q.content.complexity_constraints}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                     {!!rubric && (
-                      <div className="mt-3 rounded-lg bg-[#f2efff] px-3 py-2 border border-indigo-100">
-                        <div className="text-[11px] text-indigo-700">
-                          <span className="font-semibold">Evaluation Rubric:</span>{" "}
-                          <span className="text-indigo-700/90">{rubric}</span>
+                      <div className="mt-3 rounded-xl bg-violet-50 px-3 py-2 border border-violet-100">
+                        <div className="text-[11px] text-violet-700">
+                          <span className="font-semibold text-violet-600">Evaluation Rubric:</span>{" "}
+                          <span className="text-violet-700/90 leading-relaxed font-medium">
+                            {rubric}
+                          </span>
                         </div>
                       </div>
                     )}

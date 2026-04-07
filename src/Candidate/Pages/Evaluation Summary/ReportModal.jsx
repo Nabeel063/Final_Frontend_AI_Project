@@ -66,7 +66,7 @@ function ReportModal({ selectedCandidate, setOpenModal, setSelectedCandidate }) 
                 </button>
 
                 <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100">
-                    {hasPassed && (
+                    {hasPassed ? (
                         <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 rounded-xl border border-green-200 bg-green-50 shadow-sm animate-fade-in">
                             <svg className="w-7 h-7 text-green-500 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="#d1fae5" />
@@ -75,6 +75,17 @@ function ReportModal({ selectedCandidate, setOpenModal, setSelectedCandidate }) 
                             <div>
                                 <p className="text-green-700 font-semibold text-lg leading-tight mb-1 sm:mb-0">Congratulations! You have passed this round.</p>
                                 <p className="text-green-600 text-sm">Our HR team will connect with you for further rounds. Please keep an eye on your email for updates.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 shadow-sm animate-fade-in">
+                            <svg className="w-7 h-7 text-amber-500 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="#fffbeb" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="#f59e0b" />
+                            </svg>
+                            <div>
+                                <p className="text-amber-700 font-semibold text-lg leading-tight mb-1 sm:mb-0">Keep improving! You're almost there.</p>
+                                <p className="text-amber-600 text-sm">Unfortunately, you didn't meet the passing threshold this time. Focus on the insights below and good luck for your next attempt!</p>
                             </div>
                         </div>
                     )}
