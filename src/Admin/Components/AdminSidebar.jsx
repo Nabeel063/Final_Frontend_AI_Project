@@ -256,7 +256,7 @@ const AdminSidebar = ({ isOpen = true, onToggle }) => {
               <button
                 onClick={() => {
                   setIsProfileMenuOpen(false);
-                  navigate('/Admin-Dashboard/AdminProfile');
+                  navigate('/profile');
                 }}
                 className={[
                   'w-full flex items-center gap-3',

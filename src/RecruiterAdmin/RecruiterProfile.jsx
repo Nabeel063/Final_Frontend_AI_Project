@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { Camera } from "lucide-react";
 import axios from "axios";
 import { baseUrl } from "../utils/ApiConstants";
 import banner from "../img/profile-banner.png"
-import india from "../img/ind-icon.png"
 
 const RecruiterProfile = () => {
     const [formData, setFormData] = useState({
@@ -117,17 +117,6 @@ const RecruiterProfile = () => {
         );
     }
 
-    const getInitials = (name) => {
-        if (!name) return 'NA';
-        const words = name.trim().split(/\s+/);
-        if (words.length === 1) {
-            return words[0][0]?.toUpperCase() || 'N';
-        }
-        const firstLetter = words[0][0]?.toUpperCase() || '';
-        const secondLetter = words[1][0]?.toUpperCase() || '';
-        return firstLetter + secondLetter;
-    };
-
     return (
         <div className="overflow-hidden">
 
@@ -137,10 +126,16 @@ const RecruiterProfile = () => {
 
             <div className="relative flex left-15">
                 <div className="-mt-12 relative">
-                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md bg-gradient-to-br from-[#6950BD] to-[#896BE6] flex items-center justify-center">
-                        <span className="text-white text-2xl font-bold select-none">
-                            {getInitials(formData.name)}
-                        </span>
+                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md">
+                        <img
+                            src="https://i.pravatar.cc/150"
+                            alt="profile"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+
+                    <div className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow cursor-pointer">
+                        <Camera size={16} />
                     </div>
                 </div>
             </div>
@@ -182,8 +177,7 @@ const RecruiterProfile = () => {
 
                         <div className="flex mt-2">
                             <div className="flex items-center px-3 w-22 border rounded-l-lg">
-                                <img src={india} alt="India" className="w-5 h-5 mr-2" />
-                                +91
+                                IN +91
                             </div>
 
                             <input

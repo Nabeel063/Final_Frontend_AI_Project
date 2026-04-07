@@ -2,9 +2,12 @@ import { pythonUrl } from "../../utils/ApiConstants";
 const BASE_URL = `${pythonUrl}/v1`;
 
 export const testApi = {
-  startTest: async (questionSetId) => {
+  startTest: async (questionSetId, orgId) => {
     try {
-      const response = await fetch(`${BASE_URL}/test/start/${questionSetId}`);
+      const headers = { 'Content-Type': 'application/json' };
+      if (orgId) headers['X-Org-Id'] = orgId;
+      
+      const response = await fetch(`${BASE_URL}/test/start/${questionSetId}`, { headers });
       if (!response.ok) throw new Error('Failed to fetch test');
       return await response.json();
     } catch (error) {
@@ -13,16 +16,18 @@ export const testApi = {
     }
   },
 
-  submitSection: async (questionSetId, submissionData) => {
+  submitSection: async (questionSetId, submissionData, orgId) => {
     try {
       const url = questionSetId
         ? `${BASE_URL}/test/submit_section/${encodeURIComponent(questionSetId)}`
         : `${BASE_URL}/test/submit_section`;
+      
+      const headers = { 'Content-Type': 'application/json' };
+      if (orgId) headers['X-Org-Id'] = orgId;
+
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(submissionData),
       });
       const text = await response.text();
@@ -34,7 +39,6 @@ export const testApi = {
         }
         return json;
       } catch (parseErr) {
-        // non-JSON response
         if (!response.ok) {
           console.error('submitSection server error (non-json):', response.status, text);
           throw new Error(`Failed to submit test (${response.status})`);
@@ -46,14 +50,15 @@ export const testApi = {
       throw error;
     }
   },
-  saveViolations: async (payload) => {
+  saveViolations: async (payload, orgId) => {
     try {
-      console.log("Payload in test.js",payload)
-      const response = await fetch(`${BASE_URL}/test/save_violations`, {
+      console.log("Payload in test.js", payload);
+      const headers = { 'Content-Type': 'application/json' };
+      if (orgId) headers['X-Org-Id'] = orgId;
+
+      const response = await fetch(`${BASE_URL}/save_violations`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error('Failed to save violations');
@@ -63,11 +68,14 @@ export const testApi = {
       throw error;
     }
   },
-  createSession: async (payload = {}) => {
+  createSession: async (payload = {}, orgId) => {
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (orgId) headers['X-Org-Id'] = orgId;
+
       const response = await fetch(`${BASE_URL}/test/create_session`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error('Failed to create session');
@@ -77,11 +85,15 @@ export const testApi = {
       throw error;
     }
   },
-  getVideoUrl: async (attemptId) => {
+  getVideoUrl: async (attemptId, orgId) => {
     try {
       if (!attemptId) return { video_url: null };
       const url = `${BASE_URL}/test/video_url?attempt_id=${encodeURIComponent(attemptId)}`;
-      const response = await fetch(url);
+      
+      const headers = { 'Content-Type': 'application/json' };
+      if (orgId) headers['X-Org-Id'] = orgId;
+
+      const response = await fetch(url, { headers });
       const text = await response.text();
       try {
         const json = text ? JSON.parse(text) : null;
@@ -95,7 +107,6 @@ export const testApi = {
           console.error('getVideoUrl server error (non-json):', response.status, text);
           throw new Error(`Failed to get video url (${response.status})`);
         }
-        // non-json but ok
         return { video_url: text };
       }
     } catch (error) {

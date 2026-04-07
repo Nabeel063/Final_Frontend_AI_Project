@@ -919,6 +919,7 @@ function Results() {
   const videoRef = useRef(null);
   const [playAttemptId, setPlayAttemptId] = useState(null);
   const [selectedAttempt, setSelectedAttempt] = useState(null);
+  const [selectedAttempt, setSelectedAttempt] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [attemptsError, setAttemptsError] = useState(null);
@@ -994,7 +995,11 @@ function Results() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${pythonUrl}/v1/finalise/finalized-tests`);
+      const orgId = localStorage.getItem('org_id') || localStorage.getItem('orgId');
+      const headers = {};
+      if (orgId) headers['X-Org-Id'] = orgId;
+
+      const res = await fetch(`${pythonUrl}/v1/finalise/finalized-tests`, { headers });
       if (!res.ok) {
         const txt = await res.text().catch(() => 'Failed');
         throw new Error(txt || 'Failed loading finalized tests');
@@ -1035,7 +1040,11 @@ function Results() {
           try {
             if (!job.raw || !job.raw.question_set_id) return job;
             const qsid = encodeURIComponent(job.raw.question_set_id);
-            const attRes = await fetch(`${pythonUrl}/v1/test/attempts/${qsid}`);
+            const orgId = localStorage.getItem('org_id') || localStorage.getItem('orgId');
+            const headers = {};
+            if (orgId) headers['X-Org-Id'] = orgId;
+
+            const attRes = await fetch(`${pythonUrl}/v1/test/attempts/${qsid}`, { headers });
             if (!attRes.ok) return job;
             const attData = await attRes.json();
 
@@ -1046,9 +1055,14 @@ function Results() {
               attemptsArr = attData.attempts;
             }
 
-            // Unique candidates count karo
+            // Unique candidates count karo - use both candidate_id and cid for robustness
             const uniqueCandidates = new Set(
-              attemptsArr.map(a => a.candidate_id).filter(Boolean)
+              attemptsArr
+                .map(a => {
+                  const id = a.candidate_id || a.cid;
+                  return id ? String(id) : null;
+                })
+                .filter(Boolean)
             );
 
             return {
@@ -1121,7 +1135,11 @@ function Results() {
       setAttemptsError(null);
       try {
         const qsid = encodeURIComponent(job.raw.question_set_id);
-        const res = await fetch(`${pythonUrl}/v1/test/attempts/${qsid}`);
+        const orgId = localStorage.getItem('org_id') || localStorage.getItem('orgId');
+        const headers = {};
+        if (orgId) headers['X-Org-Id'] = orgId;
+
+        const res = await fetch(`${pythonUrl}/v1/test/attempts/${qsid}`, { headers });
         if (!res.ok) {
           const txt = await res.text().catch(() => 'Failed');
           console.error('Failed to load attempts', txt);
@@ -1149,9 +1167,10 @@ function Results() {
         // enrich each attempt with candidate info from public candidate API
         const enriched = await Promise.all((attemptsArr || []).map(async (a) => {
           let candidate = null;
-          if (a && a.candidate_id) {
+          const identifier = a.cid || a.candidate_id;
+          if (identifier) {
             try {
-              const r2 = await fetch(`${baseUrl}/candidate/public/${encodeURIComponent(a.cid)}`);
+              const r2 = await fetch(`${baseUrl}/candidate/public/${encodeURIComponent(identifier)}`);
               if (r2.ok) {
                 const cdata = await r2.json();
                 // API may return { success: true, candidate: { ... } } or the candidate object directly
@@ -1185,8 +1204,8 @@ function Results() {
         };
 
         for (const a of enriched) {
-          const cid = a.candidate_id || (a.candidate && (a.candidate.id || a.candidate.candidate_id)) || 'unknown';
-          const key = String(cid);
+          const cidValue = a.cid || a.candidate_id || (a.candidate && (a.candidate.id || a.candidate.candidate_id)) || 'unknown';
+          const key = String(cidValue);
           const score = computeAttemptScore(a);
           const ts = a.created_at ? new Date(String(a.created_at)) : null;
           if (!aggMap[key]) {
@@ -1197,6 +1216,7 @@ function Results() {
               tab_switches: Number(a.tab_switches) || 0,
               inactivities: Number(a.inactivities) || 0,
               face_not_visible: Number(a.face_not_visible) || 0,
+              multiple_faces: Number(a.multiple_faces) || 0,
               attempts_count: 1,
               created_at: ts,
               // keep a representative recording/audio URL and raw qa_data for viewing
@@ -1209,6 +1229,7 @@ function Results() {
             aggMap[key].tab_switches += Number(a.tab_switches) || 0;
             aggMap[key].inactivities += Number(a.inactivities) || 0;
             aggMap[key].face_not_visible += Number(a.face_not_visible) || 0;
+            aggMap[key].multiple_faces += Number(a.multiple_faces) || 0;
             aggMap[key].attempts_count += 1;
             // keep latest submitted time
             if (ts && (!aggMap[key].created_at || ts > aggMap[key].created_at)) aggMap[key].created_at = ts;
@@ -1285,8 +1306,8 @@ function Results() {
         setUrl(null);
         return () => { mounted = false; };
       }
-      setLoadingUrl(true);
-      testApi.getVideoUrl(attemptId)
+      const orgId = localStorage.getItem('org_id') || localStorage.getItem('orgId');
+      testApi.getVideoUrl(attemptId, orgId)
         .then((j) => {
           if (!mounted) return;
           const v = j && (j.video_url || j.videoUrl || j.url || (j.data && j.data.video_url));
@@ -1316,7 +1337,14 @@ function Results() {
     if (!ok) return;
     try {
       const qsid = encodeURIComponent(job.raw.question_set_id);
-      const res = await fetch(`${pythonUrl}/v1/finalise/finalized-test/${qsid}`, { method: 'DELETE' });
+      const orgId = localStorage.getItem('org_id') || localStorage.getItem('orgId');
+      const headers = { 'Content-Type': 'application/json' };
+      if (orgId) headers['X-Org-Id'] = orgId;
+
+      const res = await fetch(`${pythonUrl}/v1/finalise/finalized-test/${qsid}`, { 
+        method: 'DELETE',
+        headers
+      });
       if (!res.ok) {
         const txt = await res.text();
         alert('Delete failed: ' + txt);
@@ -1568,12 +1596,18 @@ function Results() {
                   <th className="px-6 py-5 text-center text-[13px] font-semibold text-[#1f1f1f] whitespace-nowrap">
                     In-Activities
                   </th>
-                  <th className="px-6 py-5 text-center text-[13px] font-semibold text-[#1f1f1f] whitespace-nowrap">
-                    Multi Face Detection
-                  </th>
+                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider text-gray-500">
+                      Face Not Visible
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider text-gray-500">
+                      Multi Face Detection
+                    </th>
                   <th className="px-6 py-5 text-center text-[13px] font-semibold text-[#1f1f1f] whitespace-nowrap">
                     Video
                   </th>
+                  {/* <th className="px-6 py-5 text-center text-[13px] font-semibold text-[#1f1f1f] whitespace-nowrap">
+                    Report
+                  </th> */}
                   {/* <th className="px-6 py-5 text-center text-[13px] font-semibold text-[#1f1f1f] whitespace-nowrap">
                     Report
                   </th> */}
@@ -1705,8 +1739,13 @@ function Results() {
                           </td>
 
                           <td className="px-6 py-5 text-center">
-                            <span className="text-[15px] font-medium text-[#ff4f6d]">
+                            <span className="text-[15px] font-medium text-orange-500">
                               {a.face_not_visible ?? 0}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-center">
+                            <span className="text-[15px] font-medium text-[#ff4f6d]">
+                              {a.multiple_faces ?? 0}
                             </span>
                           </td>
 
@@ -1735,6 +1774,16 @@ function Results() {
                               <span className="text-sm text-gray-400">N/A</span>
                             )}
                           </td>
+                          
+                          {/* <td className="px-6 py-5 text-center">
+                            <button
+                              onClick={() => setSelectedAttempt(a)}
+                              className="inline-flex items-center justify-center gap-2 px-5 py-1.5 bg-[#f3f0fb] text-[#6c5ce7] text-[14px] font-medium rounded-full hover:bg-[#ebe7ff] transition-colors"
+                            >
+                              <FileText size={16} />
+                              Report
+                            </button>
+                          </td> */}
                           
                           {/* <td className="px-6 py-5 text-center">
                             <button
@@ -1811,6 +1860,14 @@ function Results() {
           onClose={() => setSelectedAttempt(null)}
         />
       )} */}
+
+      {selectedAttempt && (
+        <ViewResults
+          jobData={selectedJob}
+          attempt={selectedAttempt}
+          onClose={() => setSelectedAttempt(null)}
+        />
+      )}
     </div>
   );
 }

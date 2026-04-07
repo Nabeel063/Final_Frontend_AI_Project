@@ -969,7 +969,7 @@ const QuestionsList = () => {
                               </p>
                             </div>
                           )}
-                          {/* {q.content?.complexity_constraints && (
+                          {q.content?.complexity_constraints && (
                             <div className="sm:col-span-2 rounded-xl border border-amber-100/50 bg-amber-50/30 p-4">
                               <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2">
                                 Complexity Constraints
@@ -978,7 +978,7 @@ const QuestionsList = () => {
                                 {q.content.complexity_constraints}
                               </p>
                             </div>
-                          )} */}
+                          )}
                         </div>
                       )}
 

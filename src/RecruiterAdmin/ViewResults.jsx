@@ -55,7 +55,7 @@ export default function ViewResults({ jobData, attempt, onClose }) {
                         <div className="bg-amber-50 border border-amber-100 p-5 rounded-2xl">
                             <p className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Violations</p>
                             <div className="flex items-baseline gap-3">
-                                <span className="text-3xl font-black text-amber-600">{(attempt.tab_switches || 0) + (attempt.inactivities || 0) + (attempt.face_not_visible || 0)}</span>
+                                <span className="text-3xl font-black text-amber-600">{(attempt.tab_switches || 0) + (attempt.inactivities || 0) + (attempt.face_not_visible || 0) + (attempt.multiple_faces || 0)}</span>
                                 <span className="text-xs text-amber-500 font-medium leading-tight">Total detected events</span>
                             </div>
                         </div>
@@ -96,9 +96,9 @@ export default function ViewResults({ jobData, attempt, onClose }) {
                                     <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Face Not Visible</p>
                                     <p className="text-lg font-bold text-gray-800">{attempt.face_not_visible || 0}</p>
                                 </div>
-                                <div className="p-3 bg-white rounded-xl border border-gray-100 opacity-50">
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Copy-Paste</p>
-                                    <p className="text-lg font-bold text-gray-800">N/A</p>
+                                <div className="p-3 bg-white rounded-xl border border-gray-100">
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Multi Face Detected</p>
+                                    <p className="text-lg font-bold text-[#ff4f6d]">{attempt.multiple_faces || 0}</p>
                                 </div>
                             </div>
                         </div>

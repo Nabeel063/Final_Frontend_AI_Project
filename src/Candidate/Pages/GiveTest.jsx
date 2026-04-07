@@ -41,14 +41,14 @@ const FULLSCREEN_EXIT_GRACE_SEC = 45;
 // ------------------------------
 // Embedded WebCamRecorder (merged into GiveTest to avoid mount/unmount timing issues)
 // ------------------------------
- 
+
 const WebCamRecorder = forwardRef(
   (
     {
       questions = [],
       candidateId,
       questionSetId,
-      onComplete = () => {},
+      onComplete = () => { },
       showMultipleFaces = false,
       sharedStream = null,
       autoStart = true,
@@ -72,11 +72,11 @@ const WebCamRecorder = forwardRef(
     // won't break this recording.
     const recordingStreamRef = useRef(null);
     const clonedTracksRef = useRef([]);
-      const createdStreamRef = useRef(false);
+    const createdStreamRef = useRef(false);
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
     const startedOnceRef = useRef(false);
- 
+
     const [interviewStarted, setInterviewStarted] = useState(false);
     const [interviewEnded, setInterviewEnded] = useState(false);
     const [currentAnswer, setCurrentAnswer] = useState("");
@@ -96,7 +96,7 @@ const WebCamRecorder = forwardRef(
         vlog('WebCamRecorder: initialized qaListRef with', qaListRef.current);
       } catch (e) { console.warn('qaList init failed', e); }
     }, [questions]);
- 
+
     const prompt =
       (questions[currentIndex]?.prompt_text || questions[currentIndex]?.question) ||
       "Please answer this question.";
@@ -113,191 +113,191 @@ const WebCamRecorder = forwardRef(
           return;
         }
         try {
-              let stream = sharedStream;
-              vlog('WebCamRecorder: init called, sharedStream present?', !!sharedStream);
-              
-              // Check if shared stream is viable
-              if (stream) {
-                const videoTracks = stream.getVideoTracks();
-                const audioTracks = stream.getAudioTracks();
-                vlog('WebCamRecorder: checking sharedStream - video tracks:', videoTracks.length, 'audio tracks:', audioTracks.length);
-                
-                // Check if tracks are actually alive
-                let tracksAlive = false;
-                if (videoTracks.length > 0) {
-                  videoTracks.forEach((t, i) => {
-                    vlog(`WebCamRecorder: video track ${i} - enabled: ${t.enabled}, readyState: ${t.readyState}`);
-                    if (t.readyState === 'live' && t.enabled) tracksAlive = true;
-                  });
-                }
-                
-                if (!tracksAlive) {
-                  if (!sharedStreamWarnedRef.current) {
-                    console.warn('WebCamRecorder: shared stream tracks are dead/ended, requesting fresh stream');
-                    sharedStreamWarnedRef.current = true;
-                  } else {
-                    vlog('WebCamRecorder: shared stream tracks dead -> requesting fresh stream (suppressed repeat warning)');
-                  }
-                  stream = null;
-                }
-              }
-              
-              // If no viable shared stream, request fresh media
-              if (!stream) {
-                  vlog('WebCamRecorder: requesting fresh camera stream');
-                stream = await navigator.mediaDevices.getUserMedia({
-                  video: true,
-                  audio: true,
-                });
-                createdStreamRef.current = true;
-              }
+          let stream = sharedStream;
+          vlog('WebCamRecorder: init called, sharedStream present?', !!sharedStream);
 
-              // Source stream is either sharedStream or a newly created stream
-              sourceStreamRef.current = stream;
+          // Check if shared stream is viable
+          if (stream) {
+            const videoTracks = stream.getVideoTracks();
+            const audioTracks = stream.getAudioTracks();
+            vlog('WebCamRecorder: checking sharedStream - video tracks:', videoTracks.length, 'audio tracks:', audioTracks.length);
 
-              // Build a dedicated recording stream with cloned tracks.
-              // This prevents recording from stopping if some other component stops/ends tracks on the shared stream.
-              try {
-                // Stop any previous cloned tracks (defensive)
-                try { (clonedTracksRef.current || []).forEach(t => { try { t.stop(); } catch(e){} }); } catch(e){}
-                clonedTracksRef.current = [];
-
-                const recStream = new MediaStream();
-                const v0 = stream.getVideoTracks && stream.getVideoTracks()[0];
-                const a0 = stream.getAudioTracks && stream.getAudioTracks()[0];
-
-                if (v0) {
-                  const vClone = v0.clone();
-                  recStream.addTrack(vClone);
-                  clonedTracksRef.current.push(vClone);
-                }
-                if (a0) {
-                  const aClone = a0.clone();
-                  recStream.addTrack(aClone);
-                  clonedTracksRef.current.push(aClone);
-                }
-
-                recordingStreamRef.current = recStream;
-              } catch (e) {
-                console.warn('WebCamRecorder: failed to create cloned recording stream, falling back to source stream', e);
-                recordingStreamRef.current = stream;
-              }
-
-              // Use recordingStreamRef for MediaRecorder; keep streamRef.current pointing to recording stream
-              streamRef.current = recordingStreamRef.current || stream;
-
-              if (videoRef.current) {
-                try { videoRef.current.srcObject = stream; } catch (e) {}
-              }
-
-              // If previewOnly is set, skip creating MediaRecorder and only attach preview
-              if (previewOnly) {
-                vlog('WebCamRecorder: previewOnly=true, skipping MediaRecorder setup');
-                setStatus('Preview');
-                setInterviewStarted(true);
-                return;
-              }
-
-              // Check stream tracks are active
-              const videoTracks = (streamRef.current || stream).getVideoTracks();
-              const audioTracks = (streamRef.current || stream).getAudioTracks();
-              vlog('WebCamRecorder: final video tracks:', videoTracks.length, 'audio tracks:', audioTracks.length);
-              
-              // Enable all tracks to ensure they're active
+            // Check if tracks are actually alive
+            let tracksAlive = false;
+            if (videoTracks.length > 0) {
               videoTracks.forEach((t, i) => {
-                t.enabled = true;
-                vlog(`WebCamRecorder: enabled video track ${i}, readyState: ${t.readyState}`);
+                vlog(`WebCamRecorder: video track ${i} - enabled: ${t.enabled}, readyState: ${t.readyState}`);
+                if (t.readyState === 'live' && t.enabled) tracksAlive = true;
               });
-              audioTracks.forEach((t, i) => {
-                t.enabled = true;
-                vlog(`WebCamRecorder: enabled audio track ${i}, readyState: ${t.readyState}`);
-              });
-              
-              if (videoTracks.length === 0) {
-                throw new Error('Stream missing video tracks - camera access required');
+            }
+
+            if (!tracksAlive) {
+              if (!sharedStreamWarnedRef.current) {
+                console.warn('WebCamRecorder: shared stream tracks are dead/ended, requesting fresh stream');
+                sharedStreamWarnedRef.current = true;
+              } else {
+                vlog('WebCamRecorder: shared stream tracks dead -> requesting fresh stream (suppressed repeat warning)');
               }
-              
-              // Audio is preferred but not strictly required for recording
-              if (audioTracks.length === 0) {
-                console.warn('WebCamRecorder: No audio tracks available - recording video only');
+              stream = null;
+            }
+          }
+
+          // If no viable shared stream, request fresh media
+          if (!stream) {
+            vlog('WebCamRecorder: requesting fresh camera stream');
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: true,
+            });
+            createdStreamRef.current = true;
+          }
+
+          // Source stream is either sharedStream or a newly created stream
+          sourceStreamRef.current = stream;
+
+          // Build a dedicated recording stream with cloned tracks.
+          // This prevents recording from stopping if some other component stops/ends tracks on the shared stream.
+          try {
+            // Stop any previous cloned tracks (defensive)
+            try { (clonedTracksRef.current || []).forEach(t => { try { t.stop(); } catch (e) { } }); } catch (e) { }
+            clonedTracksRef.current = [];
+
+            const recStream = new MediaStream();
+            const v0 = stream.getVideoTracks && stream.getVideoTracks()[0];
+            const a0 = stream.getAudioTracks && stream.getAudioTracks()[0];
+
+            if (v0) {
+              const vClone = v0.clone();
+              recStream.addTrack(vClone);
+              clonedTracksRef.current.push(vClone);
+            }
+            if (a0) {
+              const aClone = a0.clone();
+              recStream.addTrack(aClone);
+              clonedTracksRef.current.push(aClone);
+            }
+
+            recordingStreamRef.current = recStream;
+          } catch (e) {
+            console.warn('WebCamRecorder: failed to create cloned recording stream, falling back to source stream', e);
+            recordingStreamRef.current = stream;
+          }
+
+          // Use recordingStreamRef for MediaRecorder; keep streamRef.current pointing to recording stream
+          streamRef.current = recordingStreamRef.current || stream;
+
+          if (videoRef.current) {
+            try { videoRef.current.srcObject = stream; } catch (e) { }
+          }
+
+          // If previewOnly is set, skip creating MediaRecorder and only attach preview
+          if (previewOnly) {
+            vlog('WebCamRecorder: previewOnly=true, skipping MediaRecorder setup');
+            setStatus('Preview');
+            setInterviewStarted(true);
+            return;
+          }
+
+          // Check stream tracks are active
+          const videoTracks = (streamRef.current || stream).getVideoTracks();
+          const audioTracks = (streamRef.current || stream).getAudioTracks();
+          vlog('WebCamRecorder: final video tracks:', videoTracks.length, 'audio tracks:', audioTracks.length);
+
+          // Enable all tracks to ensure they're active
+          videoTracks.forEach((t, i) => {
+            t.enabled = true;
+            vlog(`WebCamRecorder: enabled video track ${i}, readyState: ${t.readyState}`);
+          });
+          audioTracks.forEach((t, i) => {
+            t.enabled = true;
+            vlog(`WebCamRecorder: enabled audio track ${i}, readyState: ${t.readyState}`);
+          });
+
+          if (videoTracks.length === 0) {
+            throw new Error('Stream missing video tracks - camera access required');
+          }
+
+          // Audio is preferred but not strictly required for recording
+          if (audioTracks.length === 0) {
+            console.warn('WebCamRecorder: No audio tracks available - recording video only');
+          }
+
+          // Find supported MIME type
+          let mimeType = 'video/webm;codecs=vp8,opus';
+          const supportedTypes = [
+            'video/webm;codecs=vp8,opus',
+            'video/webm;codecs=vp9,opus',
+            'video/webm',
+            'video/mp4',
+          ];
+
+          for (const type of supportedTypes) {
+            if (MediaRecorder.isTypeSupported(type)) {
+              mimeType = type;
+              vlog('WebCamRecorder: using MIME type:', mimeType);
+              break;
+            }
+          }
+
+          mediaRecorderRef.current = new MediaRecorder(streamRef.current, {
+            mimeType: mimeType,
+          });
+
+          mediaRecorderRef.current.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) {
+              chunksRef.current.push(e.data);
+              vlog('WebCamRecorder: chunk added, total chunks now:', chunksRef.current.length);
+            }
+          };
+
+          mediaRecorderRef.current.onstop = () => {
+            console.log('WebCamRecorder: onstop fired, final chunks collected:', chunksRef.current.length);
+            setInterviewEnded(true);
+          };
+
+          // Auto-start recording once recorder is ready (only if autoStart prop is true)
+          try {
+            if (autoStart) {
+              if (!startedOnceRef.current) {
+                chunksRef.current = [];
+              }
+              // Start the recorder and log a single start message
+              mediaRecorderRef.current.start(1000); // Request data every 1 second
+              if (!startedOnceRef.current) {
+                startedOnceRef.current = true;
+                console.log('WebCamRecorder: Recording started');
               }
 
-              // Find supported MIME type
-              let mimeType = 'video/webm;codecs=vp8,opus';
-              const supportedTypes = [
-                'video/webm;codecs=vp8,opus',
-                'video/webm;codecs=vp9,opus',
-                'video/webm',
-                'video/mp4',
-              ];
-              
-              for (const type of supportedTypes) {
-                if (MediaRecorder.isTypeSupported(type)) {
-                  mimeType = type;
-                  vlog('WebCamRecorder: using MIME type:', mimeType);
-                  break;
+              // Monitor stream health while recording
+              monitorRef.current = setInterval(() => {
+                const rec = mediaRecorderRef.current;
+                if (!rec || rec.state !== 'recording') {
+                  clearInterval(monitorRef.current);
+                  monitorRef.current = null;
+                  return;
                 }
-              }
+                const vTracks = streamRef.current?.getVideoTracks() || [];
+                const aTracks = streamRef.current?.getAudioTracks() || [];
+                vlog('WebCamRecorder: [MONITOR] recorder state:', rec.state, 'video enabled:', vTracks[0]?.enabled, 'audio enabled:', aTracks[0]?.enabled);
+              }, 2000);
 
-              mediaRecorderRef.current = new MediaRecorder(streamRef.current, {
-                mimeType: mimeType,
-              });
- 
-              mediaRecorderRef.current.ondataavailable = (e) => {
-                if (e.data && e.data.size > 0) {
-                  chunksRef.current.push(e.data);
-                  vlog('WebCamRecorder: chunk added, total chunks now:', chunksRef.current.length);
-                }
-              };
- 
-              mediaRecorderRef.current.onstop = () => {
-                console.log('WebCamRecorder: onstop fired, final chunks collected:', chunksRef.current.length);
-                setInterviewEnded(true);
-              };
-
-              // Auto-start recording once recorder is ready (only if autoStart prop is true)
-              try {
-                if (autoStart) {
-                  if (!startedOnceRef.current) {
-                    chunksRef.current = [];
-                  }
-                  // Start the recorder and log a single start message
-                  mediaRecorderRef.current.start(1000); // Request data every 1 second
-                  if (!startedOnceRef.current) {
-                    startedOnceRef.current = true;
-                    console.log('WebCamRecorder: Recording started');
-                  }
-                  
-                  // Monitor stream health while recording
-                  monitorRef.current = setInterval(() => {
-                    const rec = mediaRecorderRef.current;
-                    if (!rec || rec.state !== 'recording') {
-                      clearInterval(monitorRef.current);
-                      monitorRef.current = null;
-                      return;
-                    }
-                    const vTracks = streamRef.current?.getVideoTracks() || [];
-                    const aTracks = streamRef.current?.getAudioTracks() || [];
-                    vlog('WebCamRecorder: [MONITOR] recorder state:', rec.state, 'video enabled:', vTracks[0]?.enabled, 'audio enabled:', aTracks[0]?.enabled);
-                  }, 2000);
-                  
-                  setInterviewStarted(true);
-                  setStatus("Recording...");
-                } else {
-                  console.log('WebCamRecorder: autoStart=false, NOT starting recorder yet');
-                  setStatus("Ready to record");
-                }
-              } catch (e) {
-                console.error('WebCamRecorder: Auto-start recording failed', e);
-              }
+              setInterviewStarted(true);
+              setStatus("Recording...");
+            } else {
+              console.log('WebCamRecorder: autoStart=false, NOT starting recorder yet');
+              setStatus("Ready to record");
+            }
+          } catch (e) {
+            console.error('WebCamRecorder: Auto-start recording failed', e);
+          }
         } catch (err) {
           console.error("Camera init failed:", err);
           alert("Camera/microphone access is required!");
         }
       };
- 
+
       initRecorder();
- 
+
       // Cleanup: only stop recorder and tracks on unmount
       return () => {
         console.log('WebCamRecorder: cleanup running, recorder state:', mediaRecorderRef.current?.state);
@@ -307,17 +307,17 @@ const WebCamRecorder = forwardRef(
         // Always stop cloned tracks created for recording
         try {
           (clonedTracksRef.current || []).forEach((t) => {
-            try { t.stop(); } catch (e) {}
+            try { t.stop(); } catch (e) { }
           });
-        } catch (e) {}
+        } catch (e) { }
         clonedTracksRef.current = [];
 
         // clear monitor interval if running
-        try { if (monitorRef.current) { clearInterval(monitorRef.current); monitorRef.current = null; } } catch (e) {}
+        try { if (monitorRef.current) { clearInterval(monitorRef.current); monitorRef.current = null; } } catch (e) { }
 
         // Only stop the source stream tracks if this component created the stream itself
         if (createdStreamRef.current && sourceStreamRef.current) {
-          try { sourceStreamRef.current.getTracks().forEach((t) => t.stop()); } catch (e) {}
+          try { sourceStreamRef.current.getTracks().forEach((t) => t.stop()); } catch (e) { }
         }
       };
     }, [sharedStream]);
@@ -369,7 +369,7 @@ const WebCamRecorder = forwardRef(
         console.warn('startInterview failed', e);
       }
     };
- 
+
 
     // ---------------------------------------------------------
     // Stop Recording
@@ -407,7 +407,7 @@ const WebCamRecorder = forwardRef(
         // push current answer before stopping
         console.log('WebCamRecorder: endInterview pushing answer for index', currentIndex, 'currentAnswer=', currentAnswer);
         pushAnswerForIndex(currentIndex, currentAnswer);
-      } catch (e) {}
+      } catch (e) { }
 
       if (mediaRecorderRef.current?.state === "recording") {
         mediaRecorderRef.current.stop();
@@ -421,7 +421,7 @@ const WebCamRecorder = forwardRef(
         const rec = mediaRecorderRef.current;
         if (!rec || rec.state === 'inactive') return resolve();
         const onStop = () => {
-          try { rec.removeEventListener('stop', onStop); } catch (e) {}
+          try { rec.removeEventListener('stop', onStop); } catch (e) { }
           resolve();
         };
         try {
@@ -432,19 +432,19 @@ const WebCamRecorder = forwardRef(
         }
       });
     };
- 
+
     // ---------------------------------------------------------
     // Upload Recording to Backend
     // ---------------------------------------------------------
     // Upload Recording to Backend (for all questions answered)
     // ---------------------------------------------------------
-      const uploadRecording = async () => {
+    const uploadRecording = async () => {
       console.log('WebCamRecorder: uploadRecording called, allowUpload=', allowUpload);
       if (!allowUpload) {
         console.log('WebCamRecorder: internal upload disabled (allowUpload=false) - deferring to parent');
         // Ensure recorder is stopped/flushed so parent recording (if any) can handle finalization
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-          try { mediaRecorderRef.current.requestData(); } catch (e) {}
+          try { mediaRecorderRef.current.requestData(); } catch (e) { }
           await stopRecordingWait();
         }
         const qa_data = (qaListRef.current || []).map((item, idx) => ({
@@ -460,7 +460,7 @@ const WebCamRecorder = forwardRef(
       console.log('WebCamRecorder: uploadRecording called, current chunks:', chunksRef.current.length);
       console.log('WebCamRecorder: recorder state before stop:', mediaRecorderRef.current?.state);
       setUploading(true);
-      
+
       // ensure recorder has flushed final chunks
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         console.log('WebCamRecorder: MediaRecorder still recording, requesting final data and stopping');
@@ -469,10 +469,10 @@ const WebCamRecorder = forwardRef(
           mediaRecorderRef.current.requestData();
           console.log('WebCamRecorder: requestData called');
         } catch (e) { console.warn('requestData failed', e); }
-        
+
         // Wait a bit for ondataavailable to fire
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         await stopRecordingWait();
       }
 
@@ -538,7 +538,7 @@ const WebCamRecorder = forwardRef(
       } finally {
         setUploading(false);
       }
-      }
+    }
     // ---------------------------------------------------------
     // Exposed methods for parent component (GiveTest.jsx)
     // ---------------------------------------------------------
@@ -552,39 +552,39 @@ const WebCamRecorder = forwardRef(
           if (createdStreamRef.current) {
             streamRef.current?.getTracks().forEach((t) => t.stop());
           }
-        } catch {}
+        } catch { }
       },
     }));
- 
+
     return (
-<div className="p-4 bg-white rounded shadow relative">
-      {showMultipleFaces && (
-        <>
-          <div className="fixed inset-0 backdrop-blur-sm bg-black/30 z-50" />
-          <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-60 bg-yellow-400 text-black px-4 py-2 rounded shadow">
-            🚨 Multiple faces detected — page blurred
-          </div>
-        </>
-      )}
-<h2 className="text-xl font-bold mb-4">Video Interview</h2>
- 
+      <div className="p-4 bg-white rounded shadow relative">
+        {showMultipleFaces && (
+          <>
+            <div className="fixed inset-0 backdrop-blur-sm bg-black/30 z-50" />
+            <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-60 bg-yellow-400 text-black px-4 py-2 rounded shadow">
+              🚨 Multiple faces detected — page blurred
+            </div>
+          </>
+        )}
+        <h2 className="text-xl font-bold mb-4">Video Interview</h2>
+
         {/* Live Camera Feed */}
-<video
+        <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
           className="w-full h-72 bg-black rounded"
         />
- 
+
         {/* Question */}
-<div className="mt-4">
-<h3 className="font-semibold mb-2">Question:</h3>
-<p className="p-3 bg-gray-100 rounded">{prompt}</p>
-</div>
- 
+        <div className="mt-4">
+          <h3 className="font-semibold mb-2">Question:</h3>
+          <p className="p-3 bg-gray-100 rounded">{prompt}</p>
+        </div>
+
         {/* Text Answer */}
-<textarea
+        <textarea
           value={typeof currentAnswer === 'string' ? currentAnswer : ''}
           onChange={e => {
             if (typeof e.target.value === 'string') {
@@ -596,7 +596,7 @@ const WebCamRecorder = forwardRef(
           className="w-full p-3 border rounded mt-4 min-h-[120px]"
           placeholder="Write your explanation / answer here..."
         />
- 
+
         {/* Buttons */}
         <div className="flex gap-3 mt-4">
           {!interviewStarted && (
@@ -652,20 +652,20 @@ const WebCamRecorder = forwardRef(
             <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded">Recording complete — final upload will occur when you submit the test.</div>
           )}
         </div>
- 
+
         {/* Status */}
-<p className="text-sm text-gray-600 mt-3">Status: {status}</p>
-          {/* Uploading overlay */}
-          {uploading && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-              <div className="relative z-10 flex flex-col items-center gap-3 p-6 bg-white bg-opacity-90 rounded-lg shadow-lg">
-                <div className="w-12 h-12 border-4 border-t-blue-600 border-gray-200 rounded-full animate-spin" />
-                <div className="text-gray-700 font-medium">Uploading & Submitting...</div>
-              </div>
+        <p className="text-sm text-gray-600 mt-3">Status: {status}</p>
+        {/* Uploading overlay */}
+        {uploading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col items-center gap-3 p-6 bg-white bg-opacity-90 rounded-lg shadow-lg">
+              <div className="w-12 h-12 border-4 border-t-blue-600 border-gray-200 rounded-full animate-spin" />
+              <div className="text-gray-700 font-medium">Uploading & Submitting...</div>
             </div>
-          )}
-</div>
+          </div>
+        )}
+      </div>
     );
   }
 );
@@ -756,7 +756,7 @@ const GiveTest = ({ jdId }) => {
         const p = JSON.parse(raw);
         if (p?.name) return p.name;
       }
-    } catch (e) {}
+    } catch (e) { }
     return userInfo.name;
   });
   const [assessmentJobTitle, setAssessmentJobTitle] = useState('Software Engineer Position');
@@ -790,7 +790,10 @@ const GiveTest = ({ jdId }) => {
     tab_switches: 0,
     inactivities: 0,
     face_not_visible: 0,
+    multiple_faces: 0,
   });
+  const [orgId, setOrgId] = useState(null);
+  const orgIdRef = useRef(null);
   const [showMultipleFaces, setShowMultipleFaces] = useState(false);
   const [showTabSwitch, setShowTabSwitch] = useState(false);
   const violationsRef = useRef(violations);
@@ -814,7 +817,7 @@ const GiveTest = ({ jdId }) => {
     }
     return () => {
       if (localStream) {
-        try { localStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        try { localStream.getTracks().forEach(t => t.stop()); } catch (e) { }
       }
     };
   }, [localStream]);
@@ -835,7 +838,7 @@ const GiveTest = ({ jdId }) => {
         v.removeEventListener('play', onPlaying);
         v.removeEventListener('pause', onPause);
         v.removeEventListener('ended', onPause);
-      } catch (e) {}
+      } catch (e) { }
     };
   }, [videoRef.current]);
 
@@ -880,7 +883,7 @@ const GiveTest = ({ jdId }) => {
       setLocalStream(stream);
       streamRef.current = stream;
       // Save globally for future pages in same tab
-      try { window.__candidateCameraStream = stream; window.__cameraAllowed = true; } catch (e) {}
+      try { window.__candidateCameraStream = stream; window.__cameraAllowed = true; } catch (e) { }
       if (videoRef.current) {
         try { videoRef.current.srcObject = stream; } catch (e) { console.warn('set srcObject failed', e); }
       }
@@ -888,11 +891,11 @@ const GiveTest = ({ jdId }) => {
     } catch (err) {
       console.error('Media permissions error:', err);
       setMediaAllowed(false);
-      const errorMsg = err.name === 'NotAllowedError' 
+      const errorMsg = err.name === 'NotAllowedError'
         ? 'You denied camera/microphone access. Please enable permissions in your browser settings and refresh the page.'
         : err.name === 'NotFoundError'
-        ? 'No camera or microphone found on your device.'
-        : `Unable to access camera/microphone: ${err.message}`;
+          ? 'No camera or microphone found on your device.'
+          : `Unable to access camera/microphone: ${err.message}`;
       alert(errorMsg);
     }
   };
@@ -922,7 +925,7 @@ const GiveTest = ({ jdId }) => {
         const vids = devices.filter(d => d.kind === 'videoinput');
         setVideoDevices(vids);
         if (!selectedDeviceId && vids.length) setSelectedDeviceId(vids[0].deviceId);
-      } catch (e) {}
+      } catch (e) { }
     };
     list();
   }, []);
@@ -938,11 +941,11 @@ const GiveTest = ({ jdId }) => {
           setLocalStream(existing);
           setMediaAllowed(true);
           if (videoRef.current && videoRef.current.srcObject !== existing) {
-            try { videoRef.current.srcObject = existing; const p = videoRef.current.play && videoRef.current.play(); if (p && p.then) p.catch(()=>{}); } catch (e) { console.warn('attach global stream failed', e); }
+            try { videoRef.current.srcObject = existing; const p = videoRef.current.play && videoRef.current.play(); if (p && p.then) p.catch(() => { }); } catch (e) { console.warn('attach global stream failed', e); }
           }
           if (pollId) { clearInterval(pollId); pollId = null; }
         }
-      } catch (e) {}
+      } catch (e) { }
     };
 
     tryAttachGlobal();
@@ -982,7 +985,7 @@ const GiveTest = ({ jdId }) => {
           vElem.srcObject = candidateStream;
           // attempt to play (some browsers require explicit play call)
           const p = vElem.play && vElem.play();
-          if (p && p.then) p.then(() => {}).catch(()=>{});
+          if (p && p.then) p.then(() => { }).catch(() => { });
           setMediaAllowed(true);
           videoRef.current = vElem; // ensure other code uses this concrete element
           console.log('GiveTest: attached candidate stream to preview; stream active=', !!candidateStream.active);
@@ -1015,9 +1018,9 @@ const GiveTest = ({ jdId }) => {
             ctx.drawImage(videoEl, 0, 0, w, h);
             // mark that we have a frame so UI can hide black video
             setHasVideoFrame(true);
-          } catch (e) {}
+          } catch (e) { }
         }
-      } catch (e) {}
+      } catch (e) { }
       rafId = requestAnimationFrame(() => drawFromVideo(videoEl));
     };
 
@@ -1035,14 +1038,14 @@ const GiveTest = ({ jdId }) => {
               const ctx = c.getContext('2d');
               const w = c.width = c.clientWidth || bitmap.width || 360;
               const h = c.height = c.clientHeight || bitmap.height || 260;
-              try { ctx.drawImage(bitmap, 0, 0, w, h); } catch (e) {}
-              try { bitmap.close && bitmap.close(); } catch (e) {}
+              try { ctx.drawImage(bitmap, 0, 0, w, h); } catch (e) { }
+              try { bitmap.close && bitmap.close(); } catch (e) { }
             }
           } catch (err) {
             // grabFrame can fail on some browsers/devices; ignore
           }
         }, 700);
-      } catch (e) {}
+      } catch (e) { }
     };
 
     // Start drawing only if there is any candidate stream available
@@ -1051,7 +1054,7 @@ const GiveTest = ({ jdId }) => {
       try {
         c.width = c.clientWidth || 360;
         c.height = c.clientHeight || 260;
-      } catch (e) {}
+      } catch (e) { }
 
       // If video element is playing/rendering frames, draw from it.
       if (v && isVideoPlaying) {
@@ -1074,7 +1077,7 @@ const GiveTest = ({ jdId }) => {
             }
             // try to play; some browsers require user gesture but play() may still resolve
             const p = offscreenVideo.play && offscreenVideo.play();
-            if (p && p.then) p.catch(()=>{});
+            if (p && p.then) p.catch(() => { });
             // start RAF draws from the offscreen element
             rafId = requestAnimationFrame(() => drawFromVideo(offscreenVideo));
           }
@@ -1094,10 +1097,10 @@ const GiveTest = ({ jdId }) => {
       try {
         if (offscreenVideo) {
           offscreenVideo.pause();
-          try { offscreenVideo.srcObject = null; } catch (e) {}
+          try { offscreenVideo.srcObject = null; } catch (e) { }
           offscreenVideo = null;
         }
-      } catch (e) {}
+      } catch (e) { }
     };
   }, [localStream, mediaAllowed, step]);
 
@@ -1185,65 +1188,8 @@ const GiveTest = ({ jdId }) => {
 
   // Track visibility/tab switches and auto-submit after threshold
   useEffect(() => {
-    const onVisibility = () => {
-      if (!testStarted || submitted) return;
-      if (document.hidden) {
-        setTabSwitches(prev => {
-          const next = prev + 1;
-          try { handleViolation('tab_switches', 1); } catch (e) {}
-
-          // First switch: warning only is handled by handleViolation (avoid duplicate toasts here).
-
-          if (next >= 2) {
-            toast.error('Too many tab switches — submitting the test.');
-            // disable monitoring/UI immediately and force-finalize the test
-            try {
-              setTestStarted(false);
-
-              // Capture current answers and persist them so partial results can be reviewed later
-              const answersToSubmit = { ...(allAnswers || {}) };
-              try {
-                const key = `partialAnswers_${questionSetId}_${finalCandidateId}`;
-                sessionStorage.setItem(key, JSON.stringify(answersToSubmit));
-              } catch (e) {
-                // ignore storage failures
-              }
-
-              // Basic local MCQ evaluation for immediate feedback (optional).
-              try {
-                let mcqAnswered = 0, mcqCorrect = 0;
-                for (let sIdx = 0; sIdx < (sections || []).length; sIdx++) {
-                  const s = sections[sIdx];
-                  if (!s || !s.questions) continue;
-                  for (let qIdx = 0; qIdx < s.questions.length; qIdx++) {
-                    const q = s.questions[qIdx];
-                    const ans = answersToSubmit[q.id];
-                    if (q.type === 'mcq' && ans !== undefined && ans !== '') {
-                      mcqAnswered++;
-                      const correct = q.correct_answer || q.content?.correct_answer;
-                      if (correct != null && String(ans) === String(correct)) mcqCorrect++;
-                    }
-                  }
-                }
-                if (mcqAnswered) {
-                  toast.info(`Auto-submitted partial test: MCQ ${mcqCorrect}/${mcqAnswered} marked answers submitted.`);
-                }
-              } catch (e) {
-                // ignore local eval errors
-              }
-
-              // call forced submit with the answers captured so backend can evaluate up to this point
-              handleSubmitAllSections(answersToSubmit, { markComplete: true }).catch(e => console.warn('forced submit failed', e));
-            } catch (e) { console.warn('submit failed', e); }
-          }
-
-          return next;
-        });
-      }
-    };
-
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => document.removeEventListener('visibilitychange', onVisibility);
+    // Centralized visibility/inactivity monitoring is handled by ActivityMonitor component.
+    // This redundant listener in GiveTest is removed to prevent double-counting.
   }, [testStarted, submitted, allAnswers, sections]);
 
   // Disable text selection & copy while test active
@@ -1267,8 +1213,14 @@ const GiveTest = ({ jdId }) => {
     const fetchTest = async () => {
       try {
         setLoading(true);
-        // console.log("Question ID:", questionSetId)
-        const data = await testApi.startTest(questionSetId);
+        const queryParams = new URLSearchParams(window.location.search);
+        const orgIdFromUrl = queryParams.get('orgId') || queryParams.get('org_id');
+        if (orgIdFromUrl) {
+          setOrgId(orgIdFromUrl);
+          orgIdRef.current = orgIdFromUrl;
+        }
+
+        const data = await testApi.startTest(questionSetId, orgIdFromUrl);
         // console.log("Fetched test data:", data);
 
         const mcqQuestions = data.questions.filter(q => q.type === "mcq");
@@ -1341,7 +1293,7 @@ const GiveTest = ({ jdId }) => {
         const title = j.title || j.job_title || j.role || j.position;
         if (title) setAssessmentJobTitle(String(title));
       }
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   const currentSection = sections[currentSectionIndex];
@@ -1394,7 +1346,7 @@ const GiveTest = ({ jdId }) => {
   // notify when time reaches zero
   useEffect(() => {
     if (typeof questionTimeLeft === 'number' && questionTimeLeft <= 0) {
-      try { handleTimeUp(); } catch (e) {}
+      try { handleTimeUp(); } catch (e) { }
     }
   }, [questionTimeLeft]);
 
@@ -1522,10 +1474,10 @@ const GiveTest = ({ jdId }) => {
           ? 'Go To Next Part'
           : 'Visit Audio Interview'
       : (currentSection?.type === 'mcq' ||
-            currentSection?.type === 'coding' ||
-            currentSection?.type === 'video') &&
-          currentQuestionIndex === totalQuestionsInSection - 1 &&
-          currentSectionIndex === sections.length - 1
+        currentSection?.type === 'coding' ||
+        currentSection?.type === 'video') &&
+        currentQuestionIndex === totalQuestionsInSection - 1 &&
+        currentSectionIndex === sections.length - 1
         ? 'Submit Test'
         : currentQuestionIndex === totalQuestionsInSection - 1
           ? 'Proceed to Next Section'
@@ -1570,21 +1522,21 @@ const GiveTest = ({ jdId }) => {
 
   // Start recording immediately on mount as soon as media is available
   useEffect(() => {
-  if (recordingStartedRef.current) return;
-  if (!mediaAllowed) return;
+    if (recordingStartedRef.current) return;
+    if (!mediaAllowed) return;
 
-  const candidateStream =
-    streamRef.current ||
-    localStream ||
-    window.__candidateCameraStream;
+    const candidateStream =
+      streamRef.current ||
+      localStream ||
+      window.__candidateCameraStream;
 
-  if (!candidateStream) return;
+    if (!candidateStream) return;
 
-  console.log('GiveTest: recorder mounted and ready');
+    console.log('GiveTest: recorder mounted and ready');
 
-  setRecordingStarted(true);
-  recordingStartedRef.current = true;
-}, [mediaAllowed, localStream]);
+    setRecordingStarted(true);
+    recordingStartedRef.current = true;
+  }, [mediaAllowed, localStream]);
 
 
   // Submit all sections
@@ -1602,7 +1554,7 @@ const GiveTest = ({ jdId }) => {
       fullscreenPenaltyActiveRef.current = false;
       setShowFullscreenExitModal(false);
       setFullscreenGraceSeconds(null);
-    } catch (e) {}
+    } catch (e) { }
 
     setSubmitting(true);
     try {
@@ -1651,7 +1603,7 @@ const GiveTest = ({ jdId }) => {
         try {
           const s = location && location.state;
           if (s && (s.job_id || s.jobId || s.jdId || s.job)) resolvedJobId = s.job_id || s.jobId || s.jdId || s.job || null;
-        } catch (e) {}
+        } catch (e) { }
       }
 
       if (!resolvedJobId) {
@@ -1664,7 +1616,7 @@ const GiveTest = ({ jdId }) => {
               resolvedJobId = jd.job_id || jd.jobId || jd._id || jd.id;
             }
           }
-        } catch (e) {}
+        } catch (e) { }
 
         if (!resolvedJobId) {
           try {
@@ -1675,7 +1627,7 @@ const GiveTest = ({ jdId }) => {
                 resolvedJobId = jd.job_id || jd.jobId || jd._id || jd.id;
               }
             }
-          } catch (e) {}
+          } catch (e) { }
         }
       }
 
@@ -1687,7 +1639,7 @@ const GiveTest = ({ jdId }) => {
             const found = arr.find(it => (it.questionSetId === questionSetId) || (it.question_set_id === questionSetId));
             if (found) resolvedJobId = found.job_id || found.jobId || found._id || found.id || null;
           }
-        } catch (e) {}
+        } catch (e) { }
 
         if (!resolvedJobId) {
           try {
@@ -1697,13 +1649,13 @@ const GiveTest = ({ jdId }) => {
               const found = arr.find(it => (it.questionSetId === questionSetId) || (it.question_set_id === questionSetId));
               if (found) resolvedJobId = found.job_id || found.jobId || found._id || found.id || null;
             }
-          } catch (e) {}
+          } catch (e) { }
         }
       }
 
       console.log('GiveTest: resolvedJobId ->', resolvedJobId);
       // expose for quick debugging in console
-      try { window.__resolvedJobId = resolvedJobId; } catch (e) {}
+      try { window.__resolvedJobId = resolvedJobId; } catch (e) { }
 
       for (let sIdx = 0; sIdx < sections.length; sIdx++) {
         const section = sections[sIdx];
@@ -1731,7 +1683,7 @@ const GiveTest = ({ jdId }) => {
           };
         });
 
-        
+
 
         const submissionData = {
           question_set_id: questionSetId,
@@ -1751,7 +1703,7 @@ const GiveTest = ({ jdId }) => {
         console.log('submissionData:', submissionData);
         let result = null;
         try {
-          result = await testApi.submitSection(questionSetId, submissionData);
+          result = await testApi.submitSection(questionSetId, submissionData, orgIdRef.current);
           console.log('submitSection result:', result);
         } catch (err) {
           console.error('submitSection threw error:', err);
@@ -1764,7 +1716,7 @@ const GiveTest = ({ jdId }) => {
       setSubmitted(true);
       try {
         sessionStorage.removeItem('exam_expects_fullscreen');
-      } catch (e) {}
+      } catch (e) { }
       toast.success("Test submitted successfully!");
 
       // STOP RECORDING + MONITORING AFTER SUBMIT
@@ -1781,7 +1733,7 @@ const GiveTest = ({ jdId }) => {
         // 2. Disable further tab/inactivity/face violations
         setTestStarted(false);
         // clear any multi-face UI state
-        try { setShowMultipleFaces(false); } catch (e) {}
+        try { setShowMultipleFaces(false); } catch (e) { }
       } catch (err) {
         console.warn("Failed to cleanup after submit:", err);
       }
@@ -1790,24 +1742,23 @@ const GiveTest = ({ jdId }) => {
       try {
         if (!saveViolationsSentRef.current) {
           saveViolationsSentRef.current = true;
-          console.log("HEYYYYYYYYYYYYYYYYYYYYY:")
-            const violationsPayload = {
-              question_set_id: questionSetId,
-              candidate_id: finalCandidateId,
-              tab_switches: violationsRef.current.tab_switches || 0,
-              inactivities: violationsRef.current.inactivities || 0,
-              face_not_visible: violationsRef.current.face_not_visible || 0,
-              cid: cidFromSession || finalCandidateId,
-              job_id: resolvedJobId,
-            };
-            console.log('GiveTest: sending saveViolations payload ->', violationsPayload);
-            await testApi.saveViolations(violationsPayload);
-          console.log('Violations saved');
-        } else {
-          console.log('saveViolations skipped (already sent)');
+          const v = violationsRef.current;
+          const violationsPayload = {
+            question_set_id: questionSetId,
+            candidate_id: finalCandidateId,
+            tab_switches: v.tab_switches || 0,
+            inactivities: v.inactivities || 0,
+            face_not_visible: v.face_not_visible || 0,
+            multiple_faces: v.multiple_faces || 0, // CRITICAL FIX: missing field
+            cid: cidFromSession || finalCandidateId,
+            job_id: resolvedJobId,
+          };
+          console.log('GiveTest: sending saveViolations payload ->', violationsPayload);
+          await testApi.saveViolations(violationsPayload, orgIdRef.current);
+          console.log('GiveTest: Violations saved successfully');
         }
       } catch (err) {
-        console.warn('Failed to save violations', err);
+        console.warn('GiveTest: Failed to save violations', err);
       }
 
       // 2) optionally store candidate id to local env for other components
@@ -1931,8 +1882,7 @@ const GiveTest = ({ jdId }) => {
 
   // ActivityMonitor -> onViolation handler
   const handleViolation = (key, count = 1, flush = false) => {
-    // Accept additional keys: multiple_faces, single_face
-    if (submitted) return;
+    if (submitted || !testStarted) return;
 
     // Helper: show alert for MCQ, coding, and video sections
     const showSectionAlert = (msg) => {
@@ -1942,85 +1892,106 @@ const GiveTest = ({ jdId }) => {
       }
     };
 
+    // 1. UPDATE REF IMMEDIATELY (SYNCHRONOUS) - This is for the final submission payload
+    const currentCounts = { ...violationsRef.current };
+    if (flush) {
+      currentCounts[key] = count;
+    } else {
+      currentCounts[key] = (currentCounts[key] || 0) + count;
+    }
+    violationsRef.current = currentCounts;
+
+    // 2. UPDATE STATE FOR UI FEEDBACK (ASYNCHRONOUS)
+    setViolations(currentCounts);
+
+    // 3. EMIT SOCKET EVENT
+    try {
+      emitViolation({
+        exam_id: jdId,
+        question_set_id: questionSetId,
+        candidate_email: userInfo.email,
+        candidate_name: userInfo.name,
+        [key]: flush ? Number(count) : 1,
+      });
+    } catch (e) {
+      console.warn('emitViolation failed', e);
+    }
+
+    // 4. HANDLE SPECIFIC KEYS
     if (key === 'multiple_faces') {
       setShowMultipleFaces(true);
-      try { toast.dismiss(); } catch (e) {}
       if (!shownToastsRef.current.has('multiple_faces')) {
         const msg = '🚨 Multiple faces detected — page blurred';
         toast.warning(msg);
         showSectionAlert(msg);
         shownToastsRef.current.add('multiple_faces');
-        shownToastsRef.current.add('face_not_visible');
       }
-      try {
-        emitViolation({
-          exam_id: jdId,
-          question_set_id: questionSetId,
-          candidate_email: userInfo.email,
-          candidate_name: userInfo.name,
-          multiple_faces: count || 1,
-        });
-      } catch (e) {
-        console.warn('emitViolation failed', e);
-      }
-      return;
-    }
-
-    if (key === 'single_face') {
+    } else if (key === 'single_face') {
       setShowMultipleFaces(false);
-      try { shownToastsRef.current.delete('multiple_faces'); } catch (e) {}
-      try { toast.dismiss(); } catch (e) {}
+      shownToastsRef.current.delete('multiple_faces');
       return;
-    }
-
-    if (!['tab_switches', 'inactivities', 'face_not_visible'].includes(key)) return;
-
-    if (key === 'tab_switches') {
-      try { toast.dismiss(); } catch (e) {}
+    } else if (key === 'tab_switches') {
       const msg = '⚠️ Tab switch detected — page blurred';
-      // Always show alert for tab switch, even on first occurrence
       showSectionAlert(msg);
       if (!shownToastsRef.current.has('tab_switches')) {
         toast.warning(msg);
         shownToastsRef.current.add('tab_switches');
       }
       setShowTabSwitch(true);
-      setTimeout(() => { try { setShowTabSwitch(false); } catch (e) {} }, 3000);
+      setTimeout(() => { try { setShowTabSwitch(false); } catch (e) { } }, 3000);
+    } else {
+      // General toasts for other violations (inactivities, face_not_visible)
+      if (!shownToastsRef.current.has(key)) {
+        let msg = '';
+        if (key === 'inactivities') msg = '⌛ You have been inactive.';
+        if (key === 'face_not_visible') msg = '🚨 Face not visible!';
+        if (msg) {
+          toast[key === 'face_not_visible' ? 'error' : (key === 'inactivities' ? 'info' : 'warning')](msg);
+          showSectionAlert(msg);
+        }
+        shownToastsRef.current.add(key);
+      }
     }
 
-    setViolations(prev => {
-      const updated = flush
-        ? { ...prev, [key]: count }
-        : { ...prev, [key]: (prev[key] || 0) + count };
+    // 5. AUTO-SUBMIT LOGIC
+    // Thresholds: tab_switches >= 15, multiple_faces >= 15, inactivities >= 15, face_not_visible >= 15
+    let shouldAutoSubmit = false;
+    let submitReason = '';
 
-      if (!submitted) {
-        if (!shownToastsRef.current.has(key)) {
-          let msg = '';
-          if (key === 'tab_switches') msg = '⚠️ Tab switch detected!';
-          if (key === 'inactivities') msg = '⌛ You have been inactive.';
-          if (key === 'face_not_visible') msg = '🚨 Face not visible!';
-          if (msg) {
-            toast[key === 'face_not_visible' ? 'error' : (key === 'inactivities' ? 'info' : 'warning')](msg);
-            showSectionAlert(msg);
-          }
-          shownToastsRef.current.add(key);
-        }
-      }
+    if (currentCounts.tab_switches >= 5) {
+      shouldAutoSubmit = true;
+      submitReason = 'Too many tab switches detected.';
+    } else if (currentCounts.multiple_faces >= 5) {
+      shouldAutoSubmit = true;
+      submitReason = 'Multiple faces detected multiple times.';
+    } else if (currentCounts.inactivities >= 5) {
+      shouldAutoSubmit = true;
+      submitReason = 'Prolonged inactivity detected.';
+    } else if (currentCounts.face_not_visible >= 5) {
+      shouldAutoSubmit = true;
+      submitReason = 'Face not visible for too long.';
+    }
+
+    if (shouldAutoSubmit && testStarted && !submittingRef.current) {
+      console.log('AUTO-SUBMITTING due to proctoring violation:', submitReason);
+      toast.error(`${submitReason} Submitting test automatically.`);
 
       try {
-        emitViolation({
-          exam_id: jdId,
-          question_set_id: questionSetId,
-          candidate_email: userInfo.email,
-          candidate_name: userInfo.name,
-          [key]: flush ? Number(count) : 1,
-        });
-      } catch (e) {
-        console.warn('emitViolation failed', e);
-      }
+        setTestStarted(false);
+        const answersToSubmit = { ...(allAnswers || {}) };
 
-      return updated;
-    });
+        // Persist partial results
+        try {
+          const key = `partialAnswers_${questionSetId}_${finalCandidateId}`;
+          sessionStorage.setItem(key, JSON.stringify(answersToSubmit));
+        } catch (e) { }
+
+        handleSubmitAllSections(answersToSubmit, { markComplete: true })
+          .catch(e => console.warn('Auto-submit failed', e));
+      } catch (e) {
+        console.warn('Auto-submit handler crash', e);
+      }
+    }
   };
 
   // uncomment the below line if candidate needs to login before giving test!!!
@@ -2063,14 +2034,14 @@ const GiveTest = ({ jdId }) => {
           </p>
           <div className="flex gap-4">
             <button
-  onClick={() => {
-    setRecordingPermissionAsked(true);
-    setRecordingPermissionGranted(true);
-    setInstructionsVisible(false);
-    setTestStarted(true);
-    setStep('test');
-    toast.success('✓ Permission granted! Starting test...');
-  }}
+              onClick={() => {
+                setRecordingPermissionAsked(true);
+                setRecordingPermissionGranted(true);
+                setInstructionsVisible(false);
+                setTestStarted(true);
+                setStep('test');
+                toast.success('✓ Permission granted! Starting test...');
+              }}
 
               className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-semibold"
             >
@@ -2225,7 +2196,7 @@ const GiveTest = ({ jdId }) => {
   }
 
   // When audio interview is open, show only that UI
-  
+
 
   // NOTE: Do not early-return for AudioInterview; keep recorder mounted across sections.
 
@@ -2241,7 +2212,7 @@ const GiveTest = ({ jdId }) => {
             questions={currentSection?.questions || []}
             candidateId={finalCandidateId}
             questionSetId={questionSetId}
-            baseUrl={window.REACT_APP_BASE_URL || {pythonUrl}}
+            baseUrl={window.REACT_APP_BASE_URL || { pythonUrl }}
             onClose={() => setShowAudioInterview(false)}
             onComplete={(qa) => {
               setAudioInterviewResults(qa);
@@ -2325,23 +2296,23 @@ const GiveTest = ({ jdId }) => {
 
       {/* Persistent hidden recorder - records entire test continuously */}
       {/* Persistent recorder – mounted early, starts later */}
-{recordingStarted && recordingPermissionGranted && (
-  <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
-    <WebCamRecorder
-      ref={webcamInterviewRef}
-      candidateId={finalCandidateId}
-      questionSetId={questionSetId}
-      sharedStream={streamRef.current || localStream || window.__candidateCameraStream}
+      {recordingStarted && recordingPermissionGranted && (
+        <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+          <WebCamRecorder
+            ref={webcamInterviewRef}
+            candidateId={finalCandidateId}
+            questionSetId={questionSetId}
+            sharedStream={streamRef.current || localStream || window.__candidateCameraStream}
 
-      /* 🔑 THIS IS THE FIX */
-      autoStart={recordingPermissionGranted}
+            /* 🔑 THIS IS THE FIX */
+            autoStart={recordingPermissionGranted}
 
-      onComplete={(qa) => {
-        console.log('Recorder completed:', qa);
-      }}
-    />
-  </div>
-)}
+            onComplete={(qa) => {
+              console.log('Recorder completed:', qa);
+            }}
+          />
+        </div>
+      )}
 
 
       {/* Quick button to trigger camera permissions if preview missing */}
@@ -2489,13 +2460,12 @@ const GiveTest = ({ jdId }) => {
                         type="button"
                         disabled={!exists}
                         onClick={() => goToSectionFromTab(type)}
-                        className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                          !exists
+                        className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${!exists
                             ? 'cursor-not-allowed text-gray-300'
                             : active
                               ? 'bg-[#7C69EF]/15 text-[#5b4dd4]'
                               : 'text-gray-500 hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         {label}
                       </button>
@@ -2655,11 +2625,10 @@ const GiveTest = ({ jdId }) => {
                       type="button"
                       onClick={toggleMarkReview}
                       disabled={!currentQuestion}
-                      className={`rounded-xl px-5 py-2.5 text-sm font-semibold shadow-sm ${
-                        isCurrentMarkedForReview
+                      className={`rounded-xl px-5 py-2.5 text-sm font-semibold shadow-sm ${isCurrentMarkedForReview
                           ? 'border-2 border-violet-500 bg-violet-100 text-violet-900'
                           : 'border border-gray-200 bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      } disabled:cursor-not-allowed disabled:opacity-50`}
+                        } disabled:cursor-not-allowed disabled:opacity-50`}
                     >
                       {isCurrentMarkedForReview ? 'Marked for review' : 'Mark for Review'}
                     </button>
@@ -2688,8 +2657,8 @@ const GiveTest = ({ jdId }) => {
                   )}
                   <div className="relative">
                     {!submitted &&
-                    recordingPermissionGranted &&
-                    (step === 'test' || testStarted || mediaAllowed || !!window.__candidateCameraStream) ? (
+                      recordingPermissionGranted &&
+                      (step === 'test' || testStarted || mediaAllowed || !!window.__candidateCameraStream) ? (
                       <WebcamPreview
                         variant="embedded"
                         webcamRef={webcamRef}

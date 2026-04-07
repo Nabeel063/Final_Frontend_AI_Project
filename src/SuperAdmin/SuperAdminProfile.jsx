@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { Check } from 'lucide-react';
 import axios from 'axios';
 import { superAdminBaseUrl } from '../utils/ApiConstants';
-import banner from "../img/profile-banner.png";
-
 const SuperAdminProfile = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         role: ''
     });
-    const [originalData, setOriginalData] = useState({});
     const [loading, setLoading] = useState(true);
-    const [updating, setUpdating] = useState(false);
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -28,13 +25,11 @@ const SuperAdminProfile = () => {
                 console.log(data);
 
                 if (data.status === 'success' && data.data) {
-                    const profileData = {
+                    setFormData({
                         name: data.data.name || '',
                         email: data.data.email || '',
                         role: data.data.role || ''
-                    };
-                    setFormData(profileData);
-                    setOriginalData(profileData);
+                    });
                 }
                 setLoading(false);
             } catch (error) {
@@ -50,135 +45,107 @@ const SuperAdminProfile = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSave = async () => {
-        try {
-            setUpdating(true);
-            const response = await axios.put(
-                `${superAdminBaseUrl}/superadmin/update-superadmin`,
-                { name: formData.name, email: formData.email },
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${localStorage.getItem("token")}`
-                    }
-                }
-            );
-            const data = response.data;
-            if (data.status === 'success' && data.data) {
-                const updatedData = {
-                    name: data.data.name || formData.name,
-                    email: data.data.email || formData.email,
-                    role: formData.role
-                };
-                setFormData(updatedData);
-                setOriginalData(updatedData);
-            }
-            setUpdating(false);
-        } catch (error) {
-            console.error("Error updating profile:", error);
-            setUpdating(false);
-        }
+    const handleSave = () => {
+        console.log('Saving profile:', formData);
     };
 
     const handleCancel = () => {
-        setFormData(originalData);
+        console.log('Cancelling changes');
     };
 
     const getInitials = (name) => {
         if (!name) return 'NA';
-        const words = name.trim().split(/\s+/);
-        if (words.length === 1) {
-            return words[0][0]?.toUpperCase() || 'N';
-        }
-        const firstLetter = words[0][0]?.toUpperCase() || '';
-        const secondLetter = words[1][0]?.toUpperCase() || '';
-        return firstLetter + secondLetter;
+        return name.split(' ').map(n => n[0]).join('').toUpperCase();
     };
 
     if (loading) {
         return (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-4 md:p-6 lg:p-8 shadow-[0px_0px_10px_0px_rgba(0,_0,_0,_0.1)] max-w-3xl mx-auto rounded-xl">
+                <p className="text-center text-gray-500">Loading...</p>
+            </div>
         );
     }
 
     return (
-        <div className="overflow-hidden">
+        <div className="p-4 md:p-6 lg:p-8 shadow-[0px_0px_10px_0px_rgba(0,_0,_0,_0.1)] max-w-3xl mx-auto rounded-xl">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8 text-center">Profile</h1>
 
-            <div className="relative">
-                <img src={banner} alt="Banner" />
-            </div>
-
-            <div className="relative flex left-15">
-                <div className="-mt-12 relative">
-                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md bg-gradient-to-br from-[#6950BD] to-[#896BE6] flex items-center justify-center">
-                        <span className="text-white text-2xl font-bold select-none">
-                            {getInitials(formData.name)}
-                        </span>
-                    </div>
+            {/* Profile Avatar Section */}
+            <div className="flex flex-col md:flex-row items-center mb-8 space-x-8">
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl md:text-3xl font-bold mb-4">
+                    {getInitials(formData.name)}
+                </div>
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                    <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        <span>Upload Image</span>
+                    </button>
+                    <button className="flex items-center space-x-2 px-4 py-2 border border-red-300 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                        <span>Delete</span>
+                    </button>
                 </div>
             </div>
 
-            <div className="p-6 space-y-6">
+            {/* Profile Form */}
+            <form className="space-y-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Name
+                    </label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-
-                    <div>
-                        <label className="text-sm font-medium text-gray-700">
-                            Name
-                        </label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            className="mt-2 w-full h-11 px-4 border rounded-lg"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-sm font-medium text-gray-700">
-                            Email
-                        </label>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email
+                    </label>
+                    <div className="relative">
                         <input
                             type="email"
                             name="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            className="mt-2 w-full h-11 px-4 border rounded-lg"
+                            className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
-                    </div>
-
-                    <div>
-                        <label className="text-sm font-medium text-gray-700">
-                            Role
-                        </label>
-                        <input
-                            name="role"
-                            value={formData.role}
-                            disabled
-                            className="mt-2 w-full h-11 px-4 border rounded-lg hover:cursor-not-allowed"
-                        />
+                        <Check className="absolute right-3 top-2.5 h-5 w-5 text-green-500" />
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-4 pt-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Role
+                    </label>
+                    <input
+                        type="text"
+                        name="role"
+                        value={formData.role}
+                        readOnly
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                    />
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4 pt-6">
                     <button
+                        type="button"
                         onClick={handleCancel}
-                        className="px-6 py-2 border border-purple-500 text-purple-600 rounded-lg hover:bg-purple-50"
+                        className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                         Cancel
                     </button>
-
                     <button
+                        type="button"
                         onClick={handleSave}
-                        disabled={updating}
-                        className="px-6 py-2 bg-gradient-to-r from-[#6950BD] to-[#896BE6] text-white rounded-lg hover:bg-purple-700"
+                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                     >
-                        {updating ? 'Updating...' : 'Update Profile'}
+                        Save
                     </button>
                 </div>
-
-            </div>
+            </form>
         </div>
     );
 };

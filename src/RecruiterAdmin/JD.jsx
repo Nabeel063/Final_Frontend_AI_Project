@@ -1200,7 +1200,7 @@ function JD() {
   const getFilteredCount = (jd) => {
     const appliedCandidates = jd.appliedCandidates || [];
     const fromApplied = appliedCandidates.filter((c) => c.status === "filtered").length;
-    return (jd.filteredCandidates?.length || 0);
+    return fromApplied || (jd.filteredCandidates?.length || 0);
   };
 
   const getUnfilteredCount = (jd) => {
